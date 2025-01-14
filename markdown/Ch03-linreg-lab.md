@@ -2,13 +2,16 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: ipynb,markdown//md
-    main_language: python
+    formats: notebooks//ipynb,markdown//md
     text_representation:
       extension: .md
       format_name: markdown
       format_version: '1.3'
       jupytext_version: 1.16.6
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
 ---
 
 # Linear Regression
