@@ -16,12 +16,6 @@ jupyter:
 
 # Introduction to Python
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch02-statlearn-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch02-statlearn-lab.ipynb)
-
 ## Getting Started
 
 To run the labs in this book, you will need two things:
@@ -51,8 +45,6 @@ If you're using Windows, you can use the `start menu` to access `anaconda`, and 
 
 In this lab, we will introduce some simple `Python` commands. 
  For more resources about `Python` in general, readers may want to consult the tutorial at [docs.python.org/3/tutorial/](https://docs.python.org/3/tutorial/). 
-
-
 
 Like most programming languages, `Python` uses *functions*
 to perform operations.   To run a
@@ -125,7 +117,6 @@ element-by-element?
  In `Python`, lists hold *arbitrary* objects, and  are added using  *concatenation*. 
  In fact, concatenation is the behavior that we saw earlier when we entered `"hello" + " " + "world"`. 
 
-
 This example reflects the fact that 
  `Python` is a general-purpose programming language. Much of `Python`'s  data-specific
 functionality comes from other packages, notably `numpy`
@@ -165,8 +156,6 @@ Since `x` and `y` have been defined using `np.array()`, we get a sensible result
 ```python
 x + y
 ```
-    
-
 
 In `numpy`, matrices are typically represented as two-dimensional arrays, and vectors as one-dimensional arrays. {While it is also possible to create matrices using  `np.matrix()`, we will use `np.array()` throughout the labs in this book.}
 We can create a two-dimensional array as follows. 
@@ -175,7 +164,6 @@ We can create a two-dimensional array as follows.
 x = np.array([[1, 2], [3, 4]])
 x
 ```
-
 
 The object `x` has several 
 *attributes*, or associated objects. To access an attribute of `x`, we type `x.attribute`, where we replace `attribute`
@@ -293,9 +281,6 @@ print("x after we modify top left element of x_reshape:\n", x)
 ```
 
 Modifying `x_reshape` also modified `x` because the two objects occupy the same space in memory.
- 
-
-
 
 We just saw that we can modify an element of an array. Can we also modify a tuple? It turns out that we cannot --- and trying to do so introduces
 an *exception*, or error.
@@ -379,7 +364,6 @@ print(np.random.normal(scale=5, size=2))
 
 ```
 
-
 In order to ensure that our code provides exactly the same results
 each time it is run, we can set a *random seed* 
 using the 
@@ -413,7 +397,6 @@ y = rng.standard_normal(10)
 np.mean(y), y.mean()
 ```
 
-
 ```python
 np.var(y), y.var(), np.mean((y - y.mean())**2)
 ```
@@ -444,7 +427,6 @@ The following yields the same result.
 ```python
 X.mean(0)
 ```
-
 
 ## Graphics
 In `Python`, common practice is to use  the library
@@ -543,7 +525,6 @@ ax.set_title("Plot of X vs Y");
 fig.set_size_inches(12,3)
 fig
 ```
-
 
 Occasionally we will want to create several plots within a figure. This can be
 achieved by passing additional arguments to `subplots()`. 
@@ -684,10 +665,6 @@ See the documentation `slice?` for useful options in creating slices.
 
     
 
- 
-
-    
-
 
 
 ## Indexing Data
@@ -760,7 +737,6 @@ A[[1,3]][:,[0,2]]
 
 ```
 
-
 There are more efficient ways of achieving the same result.
 
 The *convenience function* `np.ix_()` allows us  to extract a submatrix
@@ -783,19 +759,10 @@ A[1:4:2,0:3:2]
 
 ```
 
-
 Why are we able to retrieve a submatrix directly using slices but not using lists?
 Its because they are different `Python` types, and
 are treated differently by `numpy`.
 Slices can be used to extract objects from arbitrary sequences, such as strings, lists, and tuples, while the use of lists for indexing is more limited.
-
-    
-
- 
-
-    
-
-
 
 ### Boolean Indexing
 In `numpy`, a *Boolean* is a type  that equals either   `True` or  `False` (also represented as $1$ and $0$, respectively).
@@ -861,7 +828,6 @@ idx_mixed = np.ix_([1,3], keep_cols)
 A[idx_mixed]
 
 ```
-
 
 For more details on indexing in `numpy`, readers are referred
 to the `numpy` tutorial mentioned earlier.

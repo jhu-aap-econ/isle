@@ -16,12 +16,6 @@ jupyter:
 
 # Linear Regression
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch03-linreg-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch03-linreg-lab.ipynb)
-
 ## Importing packages
 We import our standard libraries at this top
 level.
@@ -104,7 +98,6 @@ that can be used to compute the sum of the array `A` as can be seen by typing `A
 A.sum()
 
 ```
-
 
 ## Simple Linear Regression
 In this section we will  construct model 

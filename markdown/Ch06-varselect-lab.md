@@ -16,12 +16,6 @@ jupyter:
 
 # Linear Models and Regularization Methods
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch06-varselect-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch06-varselect-lab.ipynb)
-
 In this lab we implement many of the techniques discussed in this chapter.
 We import some of our libraries at this top
 level. 
@@ -672,7 +666,6 @@ results = skm.cross_validate(pipeCV,
 
 ```
 
-
 ### The Lasso
 We saw that ridge regression with a wise choice of $\lambda$ can
 outperform least squares as well as the null model on the
@@ -864,8 +857,6 @@ that is captured using $M$ principal components. For example, setting
 $M=1$ only captures 38.31% of the variance, while $M=2$ captures an additional 21.84%, for a total of 60.15% of the variance.
 By  $M=6$ it increases to
 88.63%. Beyond this the increments continue to diminish, until we use all $M=p=19$ components, which captures all  100% of the variance.
-
-
 
 ### Partial Least Squares
 Partial least squares (PLS) is implemented in the

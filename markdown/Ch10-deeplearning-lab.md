@@ -16,12 +16,6 @@ jupyter:
 
 # Deep Learning
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch10-deeplearning-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch10-deeplearning-lab.ipynb)
-
 In this section we  demonstrate how to fit the examples discussed
 in the text. We use the `Python`{} `torch` package, along with the
 `pytorch_lightning` package which provides utilities to simplify
@@ -327,8 +321,6 @@ is then mapped to a ReLU layer followed by a 40% dropout layer, and finally a
 linear map down to 1 dimension, again with a bias. The total number of
 trainable parameters is therefore $50\times 19+50+50+1=1051$.
 
-
-
 The package `torchinfo` provides a `summary()` function that neatly summarizes
 this information. We specify the size of the input and see the size
 of each tensor as it passes through layers of the network. 
@@ -552,7 +544,6 @@ hit_model.eval()
 preds = hit_module(X_test_t)
 torch.abs(Y_test_t - preds).mean()
 ```
-
 
 ### Cleanup
 In setting up our data module, we had initiated

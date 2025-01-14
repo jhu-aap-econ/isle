@@ -16,12 +16,6 @@ jupyter:
 
 # Tree-Based Methods
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch08-baggboost-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch08-baggboost-lab.ipynb)
-
 We import some of our usual libraries at this top
 level.
 
@@ -181,7 +175,6 @@ results["test_score"]
 
 ```
 
-
 Next, we consider whether pruning the tree might lead to improved
 classification performance. We first split the data into a training and
 test set. We will use cross-validation to prune the tree on the training
@@ -261,8 +254,6 @@ confusion
 ```
 
 Now 72.0% of the test observations are correctly classified, which is slightly worse than the error for the full tree (with 35 leaves). So cross-validation has not helped us much here; it only pruned off 5 leaves, at a cost of a slightly worse error. These results would change if we were to change the random number seeds above; even though cross-validation gives an unbiased approach to model selection, it does have variance.
-
-
 
 ## Fitting Regression Trees
 Here we fit a regression tree to the  `Boston`  data set. The
@@ -352,8 +343,6 @@ plot_tree(G.best_estimator_,
           ax=ax);
 
 ```
- 
-
 
 ## Bagging and Random Forests
 
@@ -432,8 +421,6 @@ The results indicate that across all of the trees considered in the
 random forest, the wealth level of the community (`lstat`) and the
 house size (`rm`) are by far the two most important variables.
 
-
-
 ## Boosting
 
 Here we use `GradientBoostingRegressor()` from `sklearn.ensemble`
@@ -505,8 +492,6 @@ np.mean((y_test - y_hat_boost)**2)
 
 In this case, using $\lambda=0.2$ leads to a almost the same test MSE
 as when using $\lambda=0.001$.
-
-
 
 ## Bayesian Additive Regression Trees
 

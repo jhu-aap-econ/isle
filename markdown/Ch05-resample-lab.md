@@ -16,12 +16,6 @@ jupyter:
 
 # Cross-Validation and the Bootstrap
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch05-resample-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch05-resample-lab.ipynb)
-
 In this lab, we explore the resampling techniques covered in this
 chapter. Some of the commands in this lab may take a while to run on
 your computer.

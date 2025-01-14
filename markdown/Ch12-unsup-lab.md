@@ -16,12 +16,6 @@ jupyter:
 
 # Unsupervised Learning
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch12-unsup-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch12-unsup-lab.ipynb)
-
 In this lab we demonstrate PCA and clustering on several datasets.
 As in other labs, we import some of our libraries at this top
 level. This makes the code more readable, as scanning the first few
@@ -726,8 +720,6 @@ On the whole, cell lines corresponding to a single cancer type do tend to
 have similar values on the first few principal component score
 vectors. This indicates that cell lines from the same cancer type tend
 to have pretty similar gene expression levels.
-
-
 
 We can also plot the percent variance
 explained by the principal components as well as the cumulative percent variance explained.

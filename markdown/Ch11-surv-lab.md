@@ -16,12 +16,6 @@ jupyter:
 
 # Survival Analysis
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch11-surv-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch11-surv-lab.ipynb)
-
  In this lab, we perform survival analyses on three separate data
 sets. In  Section~\ref{brain.cancer.sec} we analyze the  `BrainCancer` 
 data  that was first described in Section~\ref{sec:KM}. In Section~\ref{time.to.pub.sec}, we examine the  `Publication` 

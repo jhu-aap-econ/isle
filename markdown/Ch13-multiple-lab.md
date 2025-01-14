@@ -16,14 +16,6 @@ jupyter:
 
 # Multiple Testing
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch13-multiple-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch13-multiple-lab.ipynb)
-
-
-
 We include our usual imports seen in earlier labs.
 
 ```python
@@ -141,7 +133,6 @@ pd.crosstab(decision,
             colnames=["H0"])
 
 ```
-
 
 ## Family-Wise Error Rate
 Recall from  \eqref{eq:FWER.indep}  that if the null hypothesis is true

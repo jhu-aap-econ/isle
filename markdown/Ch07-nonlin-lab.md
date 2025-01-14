@@ -16,12 +16,6 @@ jupyter:
 
 # Non-Linear Modeling
 
-<a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch07-nonlin-lab.ipynb">
-<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch07-nonlin-lab.ipynb)
-
 In this lab, we demonstrate some of the nonlinear models discussed in
 this chapter. We use the `Wage`  data as a running example, and show that many of the complex non-linear fitting procedures discussed can easily be implemented in `Python`.
 
@@ -94,8 +88,6 @@ on the training data, and these will be used on all subsequent
 evaluations of the `transform()` method. For example, it is used
 on the second line, as well as in the plotting function developed below.
 
-
-
 We now create a grid of values for `age` at which we want
 predictions.
 
@@ -159,9 +151,6 @@ plot_wage_fit(age_df,
               "Degree-4 Polynomial");
 
 ```
- 
-
-
 
 With  polynomial regression we must decide on the degree of
 the polynomial to use. Sometimes we just wing it, and decide to use
@@ -416,11 +405,6 @@ of ones, so the second, third and fourth coefficients are increments
 for those bins. Why is the sum not exactly the same? It turns out that
 the `qcut()` uses $\leq$, while `bs()` uses $<$ when
 deciding bin membership.
-
-    
- 
-
- 
 
     
 
