@@ -194,7 +194,7 @@ predicted the movement of the market 52.2% of the time.
 At first glance, it appears that the logistic regression model is
 working a little better than random guessing. However, this result is
 misleading because we trained and tested the model on the same set of
-1,250 observations. In other words, $100-52.2=47.8%$ is the
+1,250 observations. In other words, $100-52.2=47.8\%$ is the
 *training* error  rate. As we have seen
 previously, the training error rate is often overly optimistic --- it
 tends to underestimate the test error rate.  In
@@ -655,7 +655,7 @@ confusion_table(knn1_pred, L_test)
 
 ```
 
-The results using $K=1$ are not very good, since only $50%$ of the
+The results using $K=1$ are not very good, since only $50\%$ of the
 observations are correctly predicted. Of course, it may be that $K=1$
 results in an overly-flexible fit to the data.
 
@@ -799,7 +799,7 @@ np.mean(y_test != knn1_pred), np.mean(y_test != "No")
 
 ```
 
-The KNN error rate on the 1,000 test observations is about $11%$.
+The KNN error rate on the 1,000 test observations is about $11\%$.
 At first glance, this may appear to be fairly good. However, since
 just over 6% of customers purchased insurance, we could get the error
 rate down to almost 6% by always predicting `No` regardless of the
