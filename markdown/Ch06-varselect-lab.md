@@ -11,7 +11,6 @@ jupyter:
       jupytext_version: 1.16.6
 ---
 
-
 # Linear Models and Regularization Methods
 
 <a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch06-varselect-lab.ipynb">
@@ -19,7 +18,6 @@ jupyter:
 </a>
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch06-varselect-lab.ipynb)
-
 
 In this lab we implement many of the techniques discussed in this chapter.
 We import some of our libraries at this top
@@ -87,7 +85,6 @@ Hitters.shape
 
 ```
 
-
 We first choose the best model using forward selection based on $C_p$ (\ref{Ch6:eq:cp}). This score
 is not built in as a metric to `sklearn`. We therefore define a function to compute it ourselves, and use
 it as a scorer. By default, `sklearn` tries to maximize a score, hence
@@ -120,8 +117,6 @@ neg_Cp = partial(nCp, sigma2)
 
 ```
 We can now use `neg_Cp()` as a scorer for model selection.
-
-
 
 Along with a score we need to specify the search strategy. This is done through the object
 `Stepwise()`  in the `ISLP.models` package. The method `Stepwise.first_peak()`
@@ -170,7 +165,6 @@ computes the cross-validated predictions for each of the models
 along the path, which we can use to evaluate the cross-validated MSE
 along the path.
 
-
 Here we define a strategy that fits the full forward selection path.
 While there are various parameter choices for `sklearn_selection_path()`,
 we use the defaults here, which selects the model at each step based on the biggest reduction  in RSS.
@@ -191,7 +185,6 @@ Yhat_in = full_path.predict(Hitters)
 Yhat_in.shape
 
 ```
-
 
 This gives us an array of fitted values --- 20 steps in all, including the fitted mean for the null model --- which we can use to evaluate
 in-sample MSE. As expected, the in-sample MSE improves each step we take,
@@ -221,7 +214,6 @@ ax.set_ylim([50000,250000]);
 Notice the expression `None` in `Y[:,None]` above.
 This adds an axis (dimension) to the one-dimensional array `Y`,
 which allows it to be recycled when subtracted from the two-dimensional `Yhat_in`.
-
 
 We are now ready to use cross-validation to estimate test error along
 the model path. We must use *only the training observations* to perform all aspects of model-fitting --- including
@@ -312,7 +304,6 @@ mse_fig
 
 ```
 
-
 ### Best Subset Selection
 Forward stepwise is a *greedy* selection procedure; at each step it augments the current set by including one additional variable.  We now apply best subset selection  to the  `Hitters` 
 data, which for every subset size, searches for the best set of predictors.  
@@ -322,7 +313,6 @@ best subset selection.
 Instead of constraining the subset to be a given size,
 this package produces a path of solutions using the subset size as a
 penalty rather than a constraint. Although the distinction is subtle, the difference comes when we cross-validate. 
-
 
 ```python
 D = design.fit_transform(Hitters)
@@ -580,7 +570,6 @@ ax.set_ylabel("Cross-validated $R^2$", fontsize=20);
 
 ```
 
-
 ### Fast Cross-Validation for Solution Paths
 The ridge, lasso, and elastic net can be efficiently fit along a sequence of $\lambda$ values, creating what is known as a *solution path* or *regularization path*. Hence there is specialized code to fit
 such paths, and to choose a suitable value of $\lambda$ using cross-validation. Even with
@@ -638,7 +627,6 @@ tuned_ridge.coef_
 As expected, none of the coefficients are zero—ridge regression does
 not perform variable selection!
 
-
 ### Evaluating Test Error of Cross-Validated Ridge
 Choosing $\lambda$ using cross-validation provides a single regression
 estimator, similar to fitting a linear regression model as we saw in
@@ -680,7 +668,6 @@ results = skm.cross_validate(pipeCV,
 -results["test_score"]
 
 ```
-    
 
 
 ### The Lasso
@@ -704,7 +691,6 @@ tuned_lasso = pipeCV.named_steps["lasso"]
 tuned_lasso.alpha_
 
 ```
-
 
 ```python
 lambdas, soln_array = skl.Lasso.path(Xs,
@@ -739,7 +725,6 @@ np.min(tuned_lasso.mse_path_.mean(1))
 
 Let’s again produce a plot of the cross-validation error.
 
-
 ```python
 lassoCV_fig, ax = subplots(figsize=(8,8))
 ax.errorbar(-np.log(tuned_lasso.alphas_),
@@ -768,11 +753,9 @@ test and training sets and internally running
 cross-validation on the training set. We leave
 this as an exercise.
 
-
 ## PCR and PLS Regression
 
 ### Principal Components Regression
-
 
 Principal components regression (PCR) can be performed using
 `PCA()`  from the `sklearn.decomposition`
@@ -862,7 +845,6 @@ cv_null = skm.cross_validate(linreg,
 
 ```
 
-
 The `explained_variance_ratio_`
 attribute of our `PCA` object provides the *percentage of variance explained* in the predictors and in the response using
 different numbers of components. This concept is discussed in greater
@@ -880,7 +862,6 @@ $M=1$ only captures 38.31% of the variance, while $M=2$ captures an additional 2
 By  $M=6$ it increases to
 88.63%. Beyond this the increments continue to diminish, until we use all $M=p=19$ components, which captures all  100% of the variance.
 
- 
 
 
 ### Partial Least Squares
@@ -926,5 +907,4 @@ ax.set_ylim([50000,250000]);
 
 CV error is minimized at 12,
 though there is little noticable difference between this point and a much lower number like 2 or 3 components.
-
 

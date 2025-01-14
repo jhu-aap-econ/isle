@@ -19,7 +19,6 @@ jupyter:
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch07-nonlin-lab.ipynb)
 
-
 In this lab, we demonstrate some of the nonlinear models discussed in
 this chapter. We use the `Wage`  data as a running example, and show that many of the complex non-linear fitting procedures discussed can easily be implemented in `Python`.
 
@@ -76,7 +75,6 @@ summarize(M)
 
 ```
 
-
 This polynomial is constructed using the function `poly()`,
 which creates
 a special *transformer* `Poly()` (using `sklearn` terminology
@@ -92,9 +90,6 @@ using the dataframe
 on the training data, and these will be used on all subsequent
 evaluations of the `transform()` method. For example, it is used
 on the second line, as well as in the plotting function developed below.
-
-
-    
 
 
 
@@ -163,7 +158,6 @@ plot_wage_fit(age_df,
 ```
  
 
-    
 
 
 With  polynomial regression we must decide on the degree of
@@ -222,7 +216,6 @@ summarize(M)
 
 ```
 
-
 Notice that the p-values are the same, and in fact the square of
 the  t-statistics are equal to the F-statistics from the
 `anova_lm()`  function;  for example: 
@@ -231,7 +224,6 @@ the  t-statistics are equal to the F-statistics from the
 (-11.983)**2
 
 ```
-
 
 However, the ANOVA method works whether or not we used orthogonal
 polynomials, provided the models are nested. For example, we can use
@@ -247,7 +239,6 @@ XEs = [model.fit_transform(Wage)
 anova_lm(*[sm.OLS(y, X_).fit() for X_ in XEs])
 
 ```
-
 
 As an alternative to using hypothesis tests and ANOVA, we could choose
 the polynomial degree using cross-validation, as discussed in Chapter~\ref{Ch5:resample}.
@@ -268,7 +259,6 @@ B = glm.fit()
 summarize(B)
 
 ```
-
 
 Once again, we make predictions using the `get_prediction()`  method.
 
@@ -321,7 +311,6 @@ summarize(sm.OLS(y, pd.get_dummies(cut_age)).fit())
 
 ```
 
-
 Here `pd.qcut()`  automatically picked the cutpoints based on the quantiles 25%, 50% and 75%, which results in four regions.  We could also have specified our own
 quantiles directly instead of the argument `4`. For cuts not based
 on quantiles we would use the `pd.cut()` function.
@@ -332,7 +321,6 @@ age, and the other coefficients are the average
 salary for those in the other age groups.  We can produce
 predictions and plots just as we did in the case of the polynomial
 fit.
-
 
 ## Splines
 In order to fit regression splines, we use transforms
@@ -404,7 +392,6 @@ When using B-splines we need not limit ourselves to cubic polynomials
 in piecewise constant functions, as in our example with
 `pd.qcut()` above.
 
-
 ```python
 bs_age0 = MS([bs("age",
                  df=3,
@@ -427,14 +414,12 @@ for those bins. Why is the sum not exactly the same? It turns out that
 the `qcut()` uses $\leq$, while `bs()` uses $<$ when
 deciding bin membership.
 
-
     
  
 
  
 
     
- 
 
 
 In order to fit a natural spline, we use the `NaturalSpline()` 
@@ -524,7 +509,6 @@ age_term.lam = lam_4
 degrees_of_freedom(X_age, age_term)
 
 ```
-
 
 Let’s vary the degrees of freedom in a similar plot to above. We choose the degrees of freedom
 as the desired degrees of freedom plus one to account for the fact that these smoothing
@@ -788,7 +772,6 @@ gam_logit.fit(Xgam, high_earn)
 
 ```
 
-
 ```python
 fig, ax = subplots(figsize=(8, 8))
 ax = plot_gam(gam_logit, 2)
@@ -817,7 +800,6 @@ column from `Xgam`. While we can deduce which column corresponds
 to this feature, for reproducibility’s sake we reform the model matrix
 on this smaller subset.
 
-
 ```python
 only_hs = Wage["education"] == "1. < HS Grad"
 Wage_ = Wage.loc[~only_hs]
@@ -839,7 +821,6 @@ gam_logit_ = LogisticGAM(age_term +
 gam_logit_.fit(Xgam_, high_earn_)
 
 ```
-
 
 Let’s look at the effect of `education`, `year` and `age` on high earner status now that we’ve
 removed those observations.
@@ -873,7 +854,6 @@ ax.set_ylabel("Effect on wage")
 ax.set_title("Partial dependence of high earner status on age", fontsize=20);
 
 ```
-
 
 ## Local Regression
 We illustrate the use of local regression using  the `lowess()` 

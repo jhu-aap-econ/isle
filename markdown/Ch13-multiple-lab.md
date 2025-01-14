@@ -20,8 +20,6 @@ jupyter:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch13-multiple-lab.ipynb)
 
 
- 
-
 
 We include our usual imports seen in earlier labs.
 
@@ -43,7 +41,6 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.multitest import multipletests as mult_test
 
 ```
-
 
 ## Review of Hypothesis Tests
 We begin by performing some one-sample $t$-tests.
@@ -141,7 +138,6 @@ pd.crosstab(decision,
             colnames=["H0"])
 
 ```
-    
 
 
 ## Family-Wise Error Rate
@@ -208,7 +204,6 @@ function can simply be compared to the desired FWER in order to
 determine whether or not to reject each hypothesis. We will later
 see that we can use the same function to control FDR as well.
 
-
 The `mult_test()` function takes $p$-values and a `method` argument, as well as an optional
 `alpha` argument. It returns the  decisions (`reject` below)
 as well as the adjusted $p$-values (`bonf`).
@@ -218,7 +213,6 @@ reject, bonf = mult_test(fund_mini_pvals, method = "bonferroni")[:2]
 reject
 
 ```
-
 
 The $p$-values `bonf` are simply the `fund_mini_pvalues` multiplied by 5 and truncated to be less than
 or equal to 1.
@@ -240,7 +234,6 @@ mult_test(fund_mini_pvals, method = "holm", alpha=0.05)[:2]
 
 ```
 
-
 As discussed previously, Manager One seems to perform particularly
 well, whereas Manager Two has poor performance.
  
@@ -249,7 +242,6 @@ well, whereas Manager Two has poor performance.
 fund_mini.mean()
 
 ```
-
 
 Is there evidence of a meaningful difference in performance between
 these two managers?  We can check this by performing a  paired $t$-test  using the `ttest_rel()` function
@@ -285,7 +277,6 @@ tukey = pairwise_tukeyhsd(returns, managers)
 print(tukey.summary())
 
 ```
-
 
 The `pairwise_tukeyhsd()` function provides confidence intervals
 for the difference between each pair of managers (`lower` and
@@ -354,7 +345,6 @@ null hypotheses!
 
 ```
 
-
 Figure~\ref{Ch12:fig:BonferroniBenjamini} displays the ordered
 $p$-values, $p_{(1)} \leq p_{(2)} \leq \cdots \leq p_{(2000)}$, for
 the  `Fund`  dataset, as well as the threshold for rejection by the
@@ -399,7 +389,6 @@ ax.axline((0, 0), (1,q/m), c="k", ls="--", linewidth=3);
 
 ```
 
-
 ## A Re-Sampling Approach
 Here, we implement the re-sampling approach to hypothesis testing
 using the  `Khan`  dataset, which we investigated in
@@ -414,7 +403,6 @@ D["Y"] = pd.concat([Khan["ytrain"], Khan["ytest"]])
 D["Y"].value_counts()
 
 ```
-
 
 There are four classes of cancer. For each gene, we compare the mean
 expression in the second class (rhabdomyosarcoma) to the mean
@@ -435,7 +423,6 @@ observedT, pvalue = ttest_ind(D2[gene_11],
 observedT, pvalue
 
 ```
-
 
 However, this $p$-value relies on the assumption that under the null
 hypothesis of no difference between the two groups, the test statistic
@@ -464,7 +451,6 @@ for b in range(B):
 (np.abs(Tnull) < np.abs(observedT)).mean()
 
 ```
-
 
 This fraction, 0.0398,
 is our re-sampling-based $p$-value.

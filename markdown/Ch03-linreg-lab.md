@@ -11,7 +11,6 @@ jupyter:
       jupytext_version: 1.16.6
 ---
 
-
 # Linear Regression
 
 <a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch03-linreg-lab.ipynb">
@@ -19,8 +18,6 @@ jupyter:
 </a>
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch03-linreg-lab.ipynb)
-
-
 
 ## Importing packages
 We import our standard libraries at this top
@@ -32,7 +29,6 @@ import pandas as pd
 from matplotlib.pyplot import subplots
 
 ```
-
 
 ### New imports
 Throughout this lab we will introduce new functions and libraries. However,
@@ -105,7 +101,6 @@ that can be used to compute the sum of the array `A` as can be seen by typing `A
 A.sum()
 
 ```
-    
 
 
 ## Simple Linear Regression
@@ -136,7 +131,6 @@ simple linear regression model.  Our response will be
  `medv`  and  `lstat`  will be the single predictor.
 For this model, we can create the model matrix by hand.
 
-
 ```python
 X = pd.DataFrame({"intercept": np.ones(Boston.shape[0]),
                   "lstat": Boston["lstat"]})
@@ -165,7 +159,6 @@ method, and returns such a summary.
 summarize(results)
 
 ```
-
 
 Before we describe other methods for working with fitted models, we outline a more useful and general framework for constructing a model matrix~`X`.
 ### Using Transformations: Fit and Transform
@@ -197,7 +190,6 @@ For example, it may compute means and standard deviations for centering and scal
 The `transform()` 
 method applies the fitted transformation to the array of data, and produces the model matrix.
 
-
 ```python
 design = MS(["lstat"])
 design = design.fit(Boston)
@@ -215,7 +207,6 @@ X = design.fit_transform(Boston)
 X[:4]
 ```
 Note that, as in the previous code chunk when the two steps were done separately, the `design` object is changed as a result of the `fit()` operation. The power of this pipeline will become clearer when we fit more complex models that involve interactions and transformations.
-
 
 Let's return to our fitted regression model.
 The object
@@ -236,7 +227,6 @@ The fitted coefficients can also be retrieved as the
 results.params
 
 ```
-
 
 The `get_prediction()`  method can be used to obtain predictions, and produce confidence intervals and
 prediction intervals for the prediction of  `medv`  for  given values of  `lstat`.
@@ -281,7 +271,6 @@ Next we will plot  `medv`  and  `lstat`
 using `DataFrame.plot.scatter()`, \definelongblankMR{plot.scatter()}{plot.slashslashscatter()}
 and wish to
 add the regression line to the resulting plot.
-
 
 ### Defining Functions
 While there is a function
@@ -338,9 +327,6 @@ There is some evidence for non-linearity in the relationship between  `lstat`  a
 
 As mentioned above, there is an existing function to add a line to a plot --- `ax.axline()` --- but knowing how to write such functions empowers us to create more expressive displays.
 
-
-
-
 Next we examine some diagnostic plots, several of which were discussed
 in Section~\ref{Ch3:problems.sec}.
 We can find the fitted values and residuals
@@ -380,7 +366,6 @@ np.argmax(infl.hat_matrix_diag)
  The `np.argmax()`  function identifies the index of the largest element of an array, optionally computed over an axis of the array.
 In this case, we maximized over the entire array
 to determine which observation has the largest leverage statistic.
-
 
 ## Multiple Linear Regression
 In order to fit a multiple linear regression model using least squares, we again use
@@ -457,7 +442,6 @@ dictionary and *generator* comprehension, though these are
 beyond our scope here. Let's look at an example. We compute the VIF for each of the variables
 in the model matrix `X`, using the function `variance_inflation_factor()`.
 
-
 ```python
 vals = [VIF(X, i)
         for i in range(1, X.shape[1])]
@@ -493,7 +477,6 @@ model2 = sm.OLS(y, X)
 summarize(model2.fit())
 
 ```
-
 
 ## Non-linear Transformations of the Predictors
 The model matrix builder can include terms beyond
@@ -554,7 +537,6 @@ as input, in which case it compares every successive pair of models.
 That also explains why their are `NaN`s in the first row above, since
 there is no previous model with which to compare the first.
 
-
 ```python
 ax = subplots(figsize=(8,8))[1]
 ax.scatter(results3.fittedvalues, results3.resid)
@@ -567,8 +549,6 @@ We see that when the quadratic term is included in the model,
 there is little discernible pattern in the residuals.
 In order to create a cubic or higher-degree polynomial fit, we can simply change the degree argument
 to `poly()`.
-
-
 
 ## Qualitative Predictors
 Here we use the  `Carseats`  data, which is included in the
@@ -616,5 +596,4 @@ positive indicates that a good shelving location is associated with high sales (
 And `ShelveLoc[Medium]` has a smaller positive coefficient,
 indicating that a medium shelving location leads to higher sales than a bad
 shelving location, but lower sales than a good shelving location.
-
 

@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md
     main_language: python
     text_representation:
       extension: .md
@@ -11,10 +11,6 @@ jupyter:
       jupytext_version: 1.16.6
 ---
 
-
-
-
-
 # Logistic Regression, LDA, QDA, and KNN
 
 <a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch04-classification-lab.ipynb">
@@ -22,10 +18,6 @@ jupyter:
 </a>
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch04-classification-lab.ipynb)
-
-
-
-
 
 ## The Stock Market Data
 
@@ -67,7 +59,6 @@ from sklearn.preprocessing import StandardScaler
 
 ```
 
-
 Now we are ready to load the `Smarket` data.
 
 ```python
@@ -97,12 +88,10 @@ today’s return are close to zero.  The only substantial correlation is between
 is increasing over time. In other words, the average number of shares traded
 daily increased from 2001 to 2005.
 
-
 ```python
 Smarket.plot(y="Volume");
 
 ```
-
 
 ## Logistic Regression
 Next, we will fit a logistic regression model in order to predict
@@ -200,14 +189,10 @@ function can be used to compute the fraction of days for which the
 prediction was correct. In this case, logistic regression correctly
 predicted the movement of the market 52.2% of the time.
 
-
 ```python
 (507+145)/1250, np.mean(labels == Smarket.Direction)
 
 ```
-
-
-
 
 At first glance, it appears that the logistic regression model is
 working a little better than random guessing. However, this result is
@@ -236,7 +221,6 @@ Smarket_test = Smarket.loc[~train]
 Smarket_test.shape
 
 ```
-
 
 The object `train` is a vector of 1,250 elements, corresponding
 to the observations in our data set. The elements of the vector that
@@ -307,7 +291,6 @@ np.mean(labels == L_test), np.mean(labels != L_test)
 
 ```
 
-
 The `!=` notation means *not equal to*, and so the last command
 computes the test set error rate. The results are rather
 disappointing: the test error rate is 52%, which is worse than
@@ -346,7 +329,6 @@ confusion_table(labels, L_test)
 
 ```
 
-
 Let’s evaluate the overall accuracy as well as the accuracy within the days when
 logistic regression predicts an increase.
 
@@ -383,9 +365,7 @@ results.predict(newX)
 
 ```
 
-
 ## Linear Discriminant Analysis
-
 
 We begin by performing LDA on the  `Smarket`  data, using the function
 `LinearDiscriminantAnalysis()`, which we have abbreviated `LDA()`. We 
@@ -428,7 +408,6 @@ lda.means_
 
 ```
 
-
 The estimated prior probabilities are stored in the `priors_` attribute.
 The package `sklearn` typically uses this trailing `_` to denote
 a quantity estimated when using the `fit()` method. We can be sure of which
@@ -439,16 +418,13 @@ lda.classes_
 
 ```
 
-
 The LDA output indicates that $\hat\pi_{Down}=0.492$ and
 $\hat\pi_{Up}=0.508$.
-
 
 ```python
 lda.priors_
 
 ```
-
 
 The linear discriminant vectors can be found in the `scalings_` attribute:
 
@@ -474,7 +450,6 @@ confusion_table(lda_pred, L_test)
 
 ```
 
-
 We can also estimate the
 probability of each class for
 each point in a training set. Applying a 50% threshold to the posterior probabilities of
@@ -489,7 +464,6 @@ np.all(
 
 ```
 
-
 Above, we used the `np.where()`  function that
 creates an array with value `'Up'` for indices where
 the second column of `lda_prob` (the estimated
@@ -502,7 +476,6 @@ np.all(
        )
 
 ```
-
 
 If we wanted to use a posterior probability threshold other than
 50% in order to make predictions, then we could easily do so. For
@@ -535,8 +508,6 @@ then producing predictions is an explicit design choice of `sklearn`. This unifo
 makes it possible to cleanly copy the classifier so that it can be fit
 on different data; e.g. different training sets arising in cross-validation.
 This standard pattern also allows for a predictable formation of workflows.
-
-
 
 ## Quadratic Discriminant Analysis
 We will now fit a QDA model to the  `Smarket`  data. QDA is
@@ -584,7 +555,6 @@ np.mean(qda_pred == L_test)
 
 ```
 
-
 This level of accuracy is quite impressive for stock market data, which is
 known to be quite hard to model accurately.  This suggests that the
 quadratic form assumed by QDA may capture the true relationship more
@@ -592,7 +562,6 @@ accurately than the linear forms assumed by LDA and logistic
 regression.  However, we recommend evaluating this method’s
 performance on a larger test set before betting that this approach
 will consistently beat the market!
-
 
 ## Naive Bayes
 Next, we fit a naive Bayes model to the `Smarket` data. The syntax is
@@ -607,7 +576,6 @@ NB.fit(X_train, L_train)
 
 ```
 
-
 The classes are stored as `classes_`.
 
 ```python
@@ -615,14 +583,12 @@ NB.classes_
 
 ```
 
-
 The class prior probabilities are stored in the `class_prior_` attribute.
 
 ```python
 NB.class_prior_
 
 ```
-
 
 The parameters of the features can be found in the `theta_` and `var_` attributes. The number of rows
 is equal to the number of classes, while the number of columns is equal to the number of features.
@@ -648,7 +614,6 @@ X_train[L_train == "Down"].mean()
 
 ```
 
-
 Similarly for the variance:
 
 ```python
@@ -672,7 +637,6 @@ As for `LDA`, the `predict_proba()` method estimates the probability that each o
 NB.predict_proba(X_test)[:5]
 
 ```
-
 
 ## K-Nearest Neighbors
 We will now perform KNN using the `KNeighborsClassifier()` function. This function works similarly
@@ -716,7 +680,6 @@ provides no further improvements. It appears that for these data, and this train
 QDA gives the best results of the methods that we have examined so
 far.
 
-
 KNN does not perform well on the `Smarket`  data, but it often does provide impressive results. As an example we will apply the KNN approach to the `Caravan`  data set, which is part of the `ISLP` library.  This data set includes 85
 predictors that measure demographic characteristics for 5,822
 individuals. The response variable is  `Purchase`, which
@@ -731,7 +694,6 @@ Purchase.value_counts()
 
 ```
 
-
 The method `value_counts()` takes a `pd.Series` or `pd.DataFrame` and returns
 a `pd.Series` with the corresponding counts
 for each unique element. In this case `Purchase` has only `Yes` and `No` values
@@ -741,7 +703,6 @@ and the method returns how many values of each there are.
 348 / 5822
 
 ```
-
 
 Our features will include all columns except `Purchase`.
 
@@ -841,7 +802,6 @@ np.mean(y_test != knn1_pred), np.mean(y_test != "No")
 
 ```
 
-
 The KNN error rate on the 1,000 test observations is about $11%$.
 At first glance, this may appear to be fairly good. However, since
 just over 6% of customers purchased insurance, we could get the error
@@ -871,7 +831,6 @@ This is double the rate that one would obtain from random guessing.
 ```python
 9/(53+9)
 ```
-
 
 ### Tuning Parameters
 
@@ -1043,7 +1002,6 @@ np.allclose(M_lm.fittedvalues, M2_lm.fittedvalues)
 
 ```
 
-
 To reproduce the left-hand side of Figure~\ref{Ch4:bikeshare}
 we must first obtain the coefficient estimates associated with
 `mnth`. The coefficients for January through November can be obtained
@@ -1176,5 +1134,4 @@ with `family=sm.families.Binomial()` to perform logistic regression. Other
 choices for the `family` argument can be used to fit other types
 of GLMs. For instance, `family=sm.families.Gamma()` fits a Gamma regression
 model.
-
 

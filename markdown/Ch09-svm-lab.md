@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md
     main_language: python
     text_representation:
       extension: .md
@@ -11,9 +11,6 @@ jupyter:
       jupytext_version: 1.16.6
 ---
 
-
-
-
 # Support Vector Machines
 
 <a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch09-svm-lab.ipynb">
@@ -21,7 +18,6 @@ jupyter:
 </a>
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch09-svm-lab.ipynb)
-
 
 In this lab, we use the `sklearn.svm` library to demonstrate the support
 vector classifier and the support vector machine.
@@ -90,7 +86,6 @@ svm_linear.fit(X, y)
 
 ```
 
-
 The support vector classifier with two features can
 be visualized by plotting values of its *decision function*.
 We have included a function for this in the `ISLP` package (inspired by a similar
@@ -132,7 +127,6 @@ svm_linear.coef_
 
 ```
 
-
 Since the support vector machine is an estimator in `sklearn`, we
 can use the usual machinery to tune it.
 
@@ -149,7 +143,6 @@ grid.fit(X, y)
 grid.best_params_
 
 ```
-
 
 We can easily access the cross-validation errors for each of these models
 in  `grid.cv_results_`. This prints out a lot of detail, so we
@@ -260,7 +253,6 @@ plot_svm(X,
 
 ```
 
-
 ## Support Vector Machine
 In order to fit an SVM using a non-linear kernel, we once again use
 the `SVC()`  estimator. However, now we use a different value
@@ -293,7 +285,6 @@ ax.scatter(X[:,0],
            cmap=cm.coolwarm);
 
 ```
-
 
 The data is randomly split into training and testing groups. We then
 fit the training data using the `SVC()`  estimator with a
@@ -379,7 +370,6 @@ confusion_table(y_hat_test, y_test)
 
 With these parameters, 12% of test
 observations are misclassified by this SVM.
-
 
 ## ROC Curves
 
@@ -510,7 +500,6 @@ plot_svm(X,
 The `sklearn.svm` library can also be used to perform support vector
 regression with a numerical response using the  estimator `SupportVectorRegression()`.
 
-
 ## Application to Gene Expression Data
 
 We now examine the `Khan` data set, which consists of a number of
@@ -560,5 +549,4 @@ confusion_table(khan_linear.predict(Khan["xtest"]),
 ```
 
 We see that using `C=10` yields two test set errors on these data.
-
 

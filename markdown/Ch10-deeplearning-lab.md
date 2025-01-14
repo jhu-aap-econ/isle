@@ -22,7 +22,6 @@ jupyter:
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch10-deeplearning-lab.ipynb)
 
-
 In this section we  demonstrate how to fit the examples discussed
 in the text. We use the `Python`{} `torch` package, along with the
 `pytorch_lightning` package which provides utilities to simplify
@@ -45,7 +44,6 @@ from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 ```
-
 
 ### Torch-Specific Imports
 There are a number of imports for `torch`. (These are not
@@ -72,7 +70,6 @@ If you have not already installed the packages `torchvision`
 and `torchinfo` you can install them by running
 `pip install torchinfo torchvision`.
 We can now import from `torchinfo`.
-
 
 ```python
 from torchinfo import summary
@@ -160,7 +157,6 @@ from glob import glob
 
 ```
 
-
 ## Single Layer Network on Hitters Data
 We start by fitting the models in Section~\ref{Ch13:sec:when-use-deep} on the `Hitters` data.
 
@@ -190,7 +186,6 @@ We do this because we will need to  use `sklearn` to fit the lasso model,
 and it requires this conversion. 
 We also use  a linear regression method from `sklearn`, rather than the method
 in Chapter~3 from `statsmodels`, to facilitate the comparisons.
-
 
 We now split the data into test and training, fixing the random
 state used by `sklearn` to do the split.
@@ -273,7 +268,6 @@ representation of a network, which is the approach we take here.
 Although this example is simple, we will go through the steps in some detail, since it will serve us well
 for the more complex examples to follow.
 
-
 ```python
 class HittersModel(nn.Module):
 
@@ -333,7 +327,6 @@ is then mapped to a ReLU layer followed by a 40% dropout layer, and finally a
 linear map down to 1 dimension, again with a bias. The total number of
 trainable parameters is therefore $50\times 19+50+50+1=1051$.
 
-    
 
 
 The package `torchinfo` provides a `summary()` function that neatly summarizes
@@ -488,7 +481,6 @@ hit_trainer.test(hit_module, datamodule=hit_dm)
 
 ```
 
-
 The results of the fit have been logged into a CSV file. We can find the
 results specific to this run in the `experiment.metrics_file_path`
 attribute of our logger. Note that each time the model is fit, the logger will output
@@ -544,7 +536,6 @@ ax.set_ylim([0, 400])
 ax.set_xticks(np.linspace(0, 50, 11).astype(int));
 ```
 
-
 We can predict directly from the final model, and
 evaluate its performance on the test data.
 Before fitting, we call the `eval()` method
@@ -561,7 +552,6 @@ hit_model.eval()
 preds = hit_module(X_test_t)
 torch.abs(Y_test_t - preds).mean()
 ```
-    
 
 
 ### Cleanup
@@ -583,7 +573,6 @@ del(Hitters,
     hit_trainer, hit_module)
 
 ```
-
 
 ## Multilayer Network on the MNIST Digit Data
 The `torchvision` package comes with a number of example datasets,
@@ -640,7 +629,6 @@ for idx, (X_ ,Y_) in enumerate(mnist_dm.train_dataloader()):
         break
 
 ```
-
 
 We see that the $X$ for each batch consists of 256 images of size `1x28x28`.
 Here the `1` indicates a single channel (greyscale). For RGB images such as `CIFAR100` below,
@@ -737,7 +725,6 @@ SGD  uses batches
 of 256 observations in computing the gradient, and doing the
 arithmetic, we see that an epoch corresponds to 188 gradient steps.
 
-
 `SimpleModule.classification()` includes
 an accuracy metric by default. Other
 classification metrics can be added from `torchmetrics`.
@@ -817,7 +804,6 @@ del(mnist_test,
     mlr_trainer)
 ```
 
-
 ## Convolutional Neural Networks
 In this section we fit a CNN to the `CIFAR100` data, which is available in the `torchvision`
 package. It is arranged in a similar fashion as the `MNIST` data.
@@ -867,7 +853,6 @@ for idx, (X_ ,Y_) in enumerate(cifar_dm.train_dataloader()):
         break
 
 ```
-
 
 Before we start, we look at some of the training images; similar code produced
 Figure~\ref{Ch13:fig:cifar100} on page \pageref{Ch13:fig:cifar100}. The example below also illustrates
@@ -968,7 +953,6 @@ summary(cifar_model,
                    "num_params"])
 ```
 
-
 The total number of trainable parameters is 964,516.
 By studying the size of the parameters, we can see that the channels halve in both
 dimensions
@@ -1045,7 +1029,6 @@ cifar_trainer.test(cifar_module,
 
 ```
 
-
 ### Hardware Acceleration
 As deep learning has become ubiquitous in machine learning, hardware
 manufacturers have produced special libraries that can
@@ -1079,7 +1062,6 @@ This yields approximately two- or three-fold  acceleration for each epoch.
 We have protected this code block using `try:` and `except:`
 clauses; if it works, we get the speedup, if it fails, nothing happens.
 
-
 ## Using Pretrained CNN Models
 We now show how to use a CNN pretrained on the  `imagenet` database to classify natural
 images, and demonstrate how we produced Figure~\ref{Ch13:fig:homeimages}.
@@ -1106,7 +1088,6 @@ imgs = torch.stack([torch.div(crop(resize(read_image(f))), 255)
 imgs = normalize(imgs)
 imgs.size()
 ```
-
 
 We now set up the trained network with the weights we read in code block~6. The model has 50 layers, with a fair bit of complexity.
 
@@ -1172,7 +1153,6 @@ for i, imgfile in enumerate(imgfiles):
 
 ```
 
-
 We see that the model
 is quite confident about `Flamingo.jpg`, but a little less so for the
 other images.
@@ -1188,7 +1168,6 @@ del(cifar_test,
     cifar_optimizer,
     cifar_trainer)
 ```
-
 
 ## IMDB Document Classification
 We now implement models for sentiment classification (Section~\ref{Ch13:sec:docum-class})  on the `IMDB`
@@ -1208,8 +1187,6 @@ We have stored three different representations of the review data for this lab:
 * `load_sequential()`, a padded
 version of the original sequence representation, limited to the last
 500 words of each review.
-
-
 
 ```python
 (imdb_seq_train,
@@ -1327,7 +1304,6 @@ Evaluating the test error yields roughly 86% accuracy.
 test_results = imdb_trainer.test(imdb_module, datamodule=imdb_dm)
 test_results
 ```
-
 
 ### Comparison to Lasso
 We now fit a lasso logistic regression model
@@ -1450,11 +1426,9 @@ del(imdb_model,
     imdb_test)
 ```
 
-
 ## Recurrent Neural Networks
 In this lab we fit the models illustrated in
 Section~\ref{Ch13:sec:recurr-neur-netw}.
-
 
 ### Sequential Models for Document Classification
 Here we  fit a simple  LSTM RNN for sentiment prediction to
@@ -1468,7 +1442,6 @@ A script that details the preprocessing can be found in the
 had fewer than 500 words, we set the document length to 500. For
 longer documents, we used the last 500 words, and for shorter
 documents, we padded the front with blanks.
-
 
 ```python
 imdb_seq_dm = SimpleDataModule(imdb_seq_train,
@@ -1490,7 +1463,6 @@ integer, this is effectively achieved by the creation of an embedding
 matrix of size $10,003\times 32$; each of the 500 integers in the
 document are then mapped to the appropriate 32 real numbers by
 indexing the appropriate rows of this matrix.
-
 
 The second  layer is an LSTM with 32 units, and the output
 layer is a single logit for the binary classification task.
@@ -1564,7 +1536,6 @@ ax.set_ylim([0.5, 1])
 
 ```
 
-
 ```python
 del(lstm_model,
     lstm_trainer,
@@ -1574,7 +1545,6 @@ del(lstm_model,
     imdb_seq_test)
 
 ```
-
 
 ### Time Series Prediction
 We now show how to fit the models in Section~\ref{Ch13:sec:time-seri-pred}
@@ -1616,7 +1586,6 @@ X.columns
 
 ```
 
-
 We first fit a simple linear model and compute the $R^2$ on the test data using
 the `score()`  method.
 
@@ -1644,7 +1613,6 @@ M.fit(X_day[train], Y[train])
 M.score(X_day[~train], Y[~train])
 ```
 This model achieves an $R^2$ of about 46%.
-
 
 To fit the RNN, we must reshape the data, as it will expect 5 lagged
 versions of each feature as indicated by the  `input_shape` argument
@@ -1775,7 +1743,6 @@ nyse_trainer.fit(nyse_module,
 nyse_trainer.test(nyse_module,
                   datamodule=nyse_dm)
 ```
-
 
 We could also fit a model without the `nn.RNN()` layer by just
 using a `nn.Flatten()` layer instead. This would be a nonlinear AR model. If in addition we excluded the 

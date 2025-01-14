@@ -14,9 +14,6 @@ jupyter:
     name: python3
 ---
 
-
-
-
 # Cross-Validation and the Bootstrap
 
 <a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch05-resample-lab.ipynb">
@@ -24,7 +21,6 @@ jupyter:
 </a>
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch05-resample-lab.ipynb)
-
 
 In this lab, we explore the resampling techniques covered in this
 chapter. Some of the commands in this lab may take a while to run on
@@ -42,7 +38,6 @@ from sklearn.model_selection import train_test_split
 
 ```
 
-
 There are several new imports needed for this lab.
 
 ```python
@@ -53,7 +48,6 @@ from sklearn.base import clone
 from sklearn.model_selection import KFold, ShuffleSplit, cross_validate
 
 ```
-
 
 ## The Validation Set Approach
 We explore the use of the validation set approach in order to estimate
@@ -167,7 +161,6 @@ predicts `mpg` using a quadratic function of `horsepower`
 performs better than a model that involves only a linear function of
 `horsepower`, and there is no evidence of an improvement in using a cubic function of `horsepower`.
 
-
 ## Cross-Validation
 In theory, the cross-validation estimate can be computed for any generalized
 linear model.  {}
@@ -215,7 +208,6 @@ $K$ results in $K$-fold cross-validation. We have provided a value
 corresponding to the total number of observations, which results in
 leave-one-out cross-validation (LOOCV). The `cross_validate()`  function produces a dictionary with several components;
 we simply want the cross-validated test score here (MSE), which is estimated to be 24.23.
-
 
 We can repeat this procedure for increasingly complex polynomial fits.
 To automate the process, we again
@@ -287,7 +279,6 @@ use of this formula.)  We still see little evidence that using cubic
 or higher-degree polynomial terms leads to a lower test error than simply
 using a quadratic fit.
 
-
 The `cross_validate()` function is flexible and can take
 different splitting mechanisms as an argument. For instance, one can use the `ShuffleSplit()` funtion to implement
 the validation set approach just as easily as K-fold cross-validation.
@@ -303,7 +294,6 @@ results = cross_validate(hp_model,
 results["test_score"]
 
 ```
-
 
 One can estimate the variability in the test error by running the following:
 
@@ -382,7 +372,6 @@ alpha_func(Portfolio,
                       100,
                       replace=True))
 ```
-
 
 This process can be generalized to create a simple function `boot_SE()` for
 computing the bootstrap standard error for arbitrary
@@ -496,7 +485,6 @@ hp_se
 
 ```
 
-
 This indicates that the bootstrap estimate for ${\rm SE}(\hat{\beta}_0)$ is
 0.85, and that the bootstrap
 estimate for ${\rm SE}(\hat{\beta}_1)$ is
@@ -512,7 +500,6 @@ model_se = summarize(hp_model.results_)["std err"]
 model_se
 
 ```
-
 
 The standard error estimates for $\hat{\beta}_0$ and $\hat{\beta}_1$
 obtained using the formulas  from Section~\ref{Ch3:secoefsec}  are
@@ -564,6 +551,4 @@ M = sm.OLS(Auto["mpg"],
 summarize(M.fit())["std err"]
 
 ```
-
-
 

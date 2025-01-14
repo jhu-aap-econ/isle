@@ -19,7 +19,6 @@ jupyter:
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch12-unsup-lab.ipynb)
 
-
 In this lab we demonstrate PCA and clustering on several datasets.
 As in other labs, we import some of our libraries at this top
 level. This makes the code more readable, as scanning the first few
@@ -74,7 +73,6 @@ USArrests.mean()
 
 ```
 
-
 Dataframes have several useful methods for computing
 column-wise summaries. We can also examine the
 variance of the four variables using the `var()`  method.
@@ -99,7 +97,6 @@ This scaling can be done via the `StandardScaler()` transform imported above. We
 scaler, which computes the necessary means and standard
 deviations and then apply it to our data using the
 `transform` method. As before, we combine these steps using the `fit_transform()` method.
-
 
 ```python
 scaler = StandardScaler(with_std=True,
@@ -145,7 +142,6 @@ We will plot these scores a bit further down.
 The `components_` attribute provides the principal component loadings:
 each row of `pcaUS.components_` contains the corresponding
 principal component loading vector.
-
 
 ```python
 pcaUS.components_
@@ -198,7 +194,6 @@ The standard deviations of the principal component scores are as follows:
 ```python
 scores.std(0, ddof=1)
 ```
-
 
 The variance of each score can be extracted directly from the `pcaUS` object via
 the `explained_variance_` attribute.
@@ -399,12 +394,9 @@ np.corrcoef(Xapp[ismiss], X[ismiss])[0,1]
 
 ```
 
-
 In this lab, we implemented  Algorithm~\ref{Ch10:alg:hardimpute}  ourselves for didactic purposes. However, a reader who wishes to apply matrix completion to their data might look to more specialized `Python`{} implementations.
 
-
 ## Clustering
-
 
 ### $K$-Means Clustering
 
@@ -498,7 +490,6 @@ initial cluster assignments, it is also important to set a random seed
 using the `random_state` argument to `KMeans()`. This way, the initial
 cluster assignments in Step 1 can be replicated, and the $K$-means
 output will be fully reproducible.
-
 
 ### Hierarchical Clustering
 
@@ -653,7 +644,6 @@ ax.set_title("Complete Linkage with Correlation-Based Dissimilarity");
 
 ```
 
-
 ## NCI60 Data Example
 Unsupervised techniques are often used in the analysis of genomic
 data. In particular, PCA and hierarchical clustering are popular
@@ -681,15 +671,12 @@ nci_data.shape
 
 ```
 
-
 We begin by examining the cancer types for the cell lines.
-
 
 ```python
 nci_labs.value_counts()
 
 ```
-
 
 ### PCA on the NCI60 Data
 
@@ -738,8 +725,6 @@ vectors. This indicates that cell lines from the same cancer type tend
 to have pretty similar gene expression levels.
 
 
-    
-
 
 We can also plot the percent variance
 explained by the principal components as well as the cumulative percent variance explained.
@@ -772,7 +757,6 @@ explained by further principal components. That is, there is an
 principal component.  This suggests that there may be little benefit
 to examining more than seven or so principal components (though even
 examining seven principal components may be difficult).
-
 
 ### Clustering the Observations of the NCI60 Data
 
@@ -831,7 +815,6 @@ pd.crosstab(nci_labs["label"],
             pd.Series(comp_cut.reshape(-1), name="Complete"))
 
 ```
-
 
 There are some clear patterns. All the leukemia cell lines fall in
 one cluster, while the breast cancer cell lines are spread out over
@@ -907,5 +890,4 @@ pd.crosstab(nci_labs["label"], pca_labels)
 
  
  
-
 

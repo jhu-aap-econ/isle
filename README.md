@@ -13,7 +13,6 @@
   
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2)
 
-
 Up-to-date version of labs for ISLP. 
 
 This repo will track labs for ISLP as their source code changes.  The
@@ -32,11 +31,9 @@ The labs can now be run from this directory:
 jupyter lab Ch02-statlearning-lab.ipynb
 ```
 
-
 # Zip / tarball
 
 You can download all the labs as a `.zip` or `.tar.gz` [here](https://github.com/intro-stat-learning/ISLP_labs/releases/tag/v2.2)
-
 
 ## Contributors ✨
 

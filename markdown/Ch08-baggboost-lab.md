@@ -11,9 +11,6 @@ jupyter:
       jupytext_version: 1.16.6
 ---
 
-
-
-
 # Tree-Based Methods
 
 <a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch08-baggboost-lab.ipynb">
@@ -21,7 +18,6 @@ jupyter:
 </a>
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch08-baggboost-lab.ipynb)
-
 
 We import some of our usual libraries at this top
 level.
@@ -49,9 +45,7 @@ from sklearn.tree import export_text, plot_tree
 
 ```
 
-
 ## Fitting Classification Trees
-
 
 We first use classification trees to analyze the  `Carseats`  data set.
 In these data, `Sales` is a continuous variable, and so we begin
@@ -96,7 +90,6 @@ clf.fit(X, High)
 
 ```
 
-
 In our discussion of qualitative features in Section~\ref{ch3:sec3},
 we noted that for a linear regression model such a feature could be
 represented by including a matrix of dummy variables (one-hot-encoding) in the model
@@ -112,7 +105,6 @@ advantage of this approach; instead it simply treats the one-hot-encoded levels 
 accuracy_score(High, clf.predict(X))
 
 ```
-
 
 With only the default arguments, the training error rate is
 21%.
@@ -185,7 +177,6 @@ results = skm.cross_validate(clf,
 results["test_score"]
 
 ```
-    
 
 
 Next, we consider whether pruning the tree might lead to improved
@@ -205,7 +196,6 @@ set.
 
 ```
 We first refit the full tree on the training set; here we do not set a `max_depth` parameter, since we will learn that through cross-validation.
-
 
 ```python
 clf = DTC(criterion="entropy", random_state=0)
@@ -267,10 +257,8 @@ confusion
 
 ```
 
-
 Now 72.0% of the test observations are correctly classified, which is slightly worse than the error for the full tree (with 35 leaves). So cross-validation has not helped us much here; it only pruned off 5 leaves, at a cost of a slightly worse error. These results would change if we were to change the random number seeds above; even though cross-validation gives an unbiased approach to model selection, it does have variance.
 
-  
 
 
 ## Fitting Regression Trees
@@ -288,7 +276,6 @@ X = np.asarray(D)
 
 First, we split the data into training and test sets, and fit the tree
 to the training data. Here we use 30% of the data for the test set.
-
 
 ```python
 (X_train,
@@ -319,7 +306,6 @@ values of `lstat` correspond to more expensive houses.
 The tree predicts a median house price of $12,042 for small-sized homes (`rm < 6.8`), in
 suburbs in which residents have low socioeconomic status (`lstat  > 14.4`) and the crime-rate is moderate (`crim > 5.8`).
 
-
 Now we use the cross-validation function to see whether pruning
 the tree will improve performance.
 
@@ -346,7 +332,6 @@ np.mean((y_test - best_.predict(X_test))**2)
 
 ```
 
-
 In other words, the test set MSE associated with the regression tree
 is 28.07.  The square root of
 the MSE is therefore around
@@ -365,11 +350,9 @@ plot_tree(G.best_estimator_,
 
 ```
  
- 
 
 
 ## Bagging and Random Forests
-
 
 Here we apply bagging and random forests to the `Boston` data, using
 the `RandomForestRegressor()` from the `sklearn.ensemble` package. Recall
@@ -382,7 +365,6 @@ bag_boston = RF(max_features=X_train.shape[1], random_state=0)
 bag_boston.fit(X_train, y_train)
 
 ```
-
 
 The argument `max_features` indicates that all 12 predictors should
 be considered for each split of the tree --- in other words, that
@@ -428,7 +410,6 @@ np.mean((y_test - y_hat_RF)**2)
 
 ```
 
-
 The test set MSE is 20.04;
 this indicates that random forests did somewhat worse than bagging
 in this case. Extracting the `feature_importances_` values from the fitted model, we can view the
@@ -448,11 +429,9 @@ The results indicate that across all of the trees considered in the
 random forest, the wealth level of the community (`lstat`) and the
 house size (`rm`) are by far the two most important variables.
 
-  
 
 
 ## Boosting
-
 
 Here we use `GradientBoostingRegressor()` from `sklearn.ensemble`
 to fit boosted regression trees to the `Boston` data
@@ -521,15 +500,12 @@ np.mean((y_test - y_hat_boost)**2)
 
 ```
 
-
 In this case, using $\lambda=0.2$ leads to a almost the same test MSE
 as when using $\lambda=0.001$.
 
- 
 
 
 ## Bayesian Additive Regression Trees
-
 
 In this section we demonstrate a  `Python` implementation of BART found in the
 `ISLP.bart` package. We fit a  model
@@ -543,7 +519,6 @@ bart_boston.fit(X_train, y_train)
 
 ```
 
-
 On this data set, with this split into test and training, we see that the test error of BART is similar to that of  random forest.
 
 ```python
@@ -551,7 +526,6 @@ yhat_test = bart_boston.predict(X_test.astype(np.float32))
 np.mean((y_test - yhat_test)**2)
 
 ```
-
 
 We can check how many times each variable appeared in the collection of trees.
 This gives a summary similar to the variable importance plot for boosting and random forests.
@@ -565,5 +539,4 @@ var_inclusion
     
   
  
-
 

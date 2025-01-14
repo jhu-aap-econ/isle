@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md
     main_language: python
     text_representation:
       extension: .md
@@ -11,9 +11,6 @@ jupyter:
       jupytext_version: 1.16.6
 ---
 
-
-
-
 # Survival Analysis
 
 <a target="_blank" href="https://colab.research.google.com/github/intro-stat-learning/ISLP_labs/blob/v2.2/Ch11-surv-lab.ipynb">
@@ -21,7 +18,6 @@ jupyter:
 </a>
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/intro-stat-learning/ISLP_labs/v2.2?labpath=Ch11-surv-lab.ipynb)
-
 
  In this lab, we perform survival analyses on three separate data
 sets. In  Section~\ref{brain.cancer.sec} we analyze the  `BrainCancer` 
@@ -71,18 +67,15 @@ BrainCancer["sex"].value_counts()
 
 ```
 
-
 ```python
 BrainCancer["diagnosis"].value_counts()
 
 ```
 
-
 ```python
 BrainCancer["status"].value_counts()
 
 ```
-
 
 Before beginning an analysis, it is important to know how the
 `status` variable has been coded.  Most software
@@ -153,7 +146,6 @@ logrank_test(by_sex["Male"]["time"],
              by_sex["Female"]["status"])
 
 ```
-
 
 The resulting $p$-value is $0.23$, indicating no evidence of a
 difference in survival between the two sexes.
@@ -273,7 +265,6 @@ predicted_survival.plot(ax=ax);
 
 ```
 
-
 ## Publication Data
 The  `Publication`  data   presented in Section~\ref{sec:pub}  can be
 found in the `ISLP` package.
@@ -309,7 +300,6 @@ posres_fit.summary[["coef", "se(coef)", "p"]]
 
 ```
 
-
 However, the results change dramatically when we include other
 predictors in the model. Here we exclude the funding mechanism
 variable.
@@ -326,7 +316,6 @@ coxph().fit(model.fit_transform(Publication),
 We see that there are a number of statistically significant variables,
 including whether the trial focused on a clinical endpoint, the impact
 of the study, and whether the study had positive or negative results.
-
 
 ## Call Center Data
 
@@ -444,7 +433,6 @@ D[:5]
 
 ```
 
-
 ```python
 D["Failed"].mean()
 
@@ -489,7 +477,6 @@ multivariate_logrank_test(D["Wait time"],
 
 ```
 
-
 Next, we consider the  effect of `Time`.
 
 ```python
@@ -498,7 +485,6 @@ multivariate_logrank_test(D["Wait time"],
                           D["Failed"])
 
 ```
-
 
 As in the case of a categorical variable with 2 levels, these
 results are similar to the likelihood ratio test
@@ -515,7 +501,6 @@ F.log_likelihood_ratio_test()
 
 ```
 
-
 Next, we look at the results for `Time`.
 
 ```python
@@ -527,7 +512,6 @@ F = coxph().fit(X, "Wait time", "Failed")
 F.log_likelihood_ratio_test()
 
 ```
-
 
 We find that differences between centers are highly significant, as
 are differences between times of day.
@@ -545,7 +529,6 @@ fit_queuing.summary[["coef", "se(coef)", "p"]]
 
 ```
 
-
 The $p$-values for Center B and evening time
 are very small. It is also clear that the
 hazard --- that is, the instantaneous risk that a call will be
@@ -555,5 +538,4 @@ generated the data ourselves, we know that the true coefficients for
 `Time = Even.` and `Time = Morn.`   are $0.04$, $-0.3$,
 $0$,   $0.2$, and $-0.2$, respectively. The coefficient estimates
 from the fitted Cox model are fairly accurate.
-
 
