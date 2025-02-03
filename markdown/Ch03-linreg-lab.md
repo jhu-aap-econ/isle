@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -24,7 +24,6 @@ level.
 import numpy as np
 import pandas as pd
 from matplotlib.pyplot import subplots
-
 ```
 
 ### New imports
@@ -36,7 +35,6 @@ lines tells us what libraries are used.
 
 ```python
 import statsmodels.api as sm
-
 ```
  We will provide relevant details about the
 functions below as they are needed.
@@ -50,7 +48,6 @@ which we import here.
 ```python
 from statsmodels.stats.anova import anova_lm
 from statsmodels.stats.outliers_influence import variance_inflation_factor as VIF
-
 ```
 
 As one of the import statements above is quite a long line, we inserted a line break `\` to
@@ -63,7 +60,6 @@ package.
 from ISLP import load_data
 from ISLP.models import ModelSpec as MS
 from ISLP.models import poly, summarize
-
 ```
 
 ### Inspecting Objects and Namespaces
@@ -74,7 +70,6 @@ objects in a namespace.
 
 ```python
 dir()
-
 ```
  This shows you everything that `Python` can find at the top level.
 There are certain objects like `__builtins__` that contain references to built-in
@@ -87,16 +82,14 @@ as well as any methods associated with it. For instance, we see `'sum'` in the l
 array.
 
 ```python
-A = np.array([3,5,11])
+A = np.array([3, 5, 11])
 dir(A)
-
 ```
  This indicates that the object `A.sum` exists. In this case it is a method
 that can be used to compute the sum of the array `A` as can be seen by typing `A.sum?`.
 
 ```python
 A.sum()
-
 ```
 
 ## Simple Linear Regression
@@ -117,7 +110,6 @@ We have included a simple loading function `load_data()` in the
 ```python
 Boston = load_data("Boston")
 Boston.columns
-
 ```
 
 Type `Boston?` to find out more about these data.
@@ -128,10 +120,8 @@ simple linear regression model.  Our response will be
 For this model, we can create the model matrix by hand.
 
 ```python
-X = pd.DataFrame({"intercept": np.ones(Boston.shape[0]),
-                  "lstat": Boston["lstat"]})
+X = pd.DataFrame({"intercept": np.ones(Boston.shape[0]), "lstat": Boston["lstat"]})
 X[:4]
-
 ```
 
 We extract the response, and fit the model.
@@ -140,7 +130,6 @@ We extract the response, and fit the model.
 y = Boston["medv"]
 model = sm.OLS(y, X)
 results = model.fit()
-
 ```
 Note that `sm.OLS()` does
 not fit the model; it specifies the model, and then `model.fit()` does the actual fitting.  
@@ -153,7 +142,6 @@ method, and returns such a summary.
 
 ```python
 summarize(results)
-
 ```
 
 Before we describe other methods for working with fitted models, we outline a more useful and general framework for constructing a model matrix~`X`.
@@ -213,7 +201,6 @@ method.
 
 ```python
 results.summary()
-
 ```
 
 The fitted coefficients can also be retrieved as the
@@ -221,7 +208,6 @@ The fitted coefficients can also be retrieved as the
 
 ```python
 results.params
-
 ```
 
 The `get_prediction()`  method can be used to obtain predictions, and produce confidence intervals and
@@ -231,10 +217,9 @@ We first create a new data frame, in this case containing only the variable `lst
 We then use the `transform()` method of `design` to create the corresponding model matrix.
 
 ```python
-new_df = pd.DataFrame({"lstat":[5, 10, 15]})
+new_df = pd.DataFrame({"lstat": [5, 10, 15]})
 newX = design.transform(new_df)
 newX
-
 ```
 
 Next we compute the predictions at `newX`, and view them by extracting the `predicted_mean` attribute.
@@ -242,19 +227,16 @@ Next we compute the predictions at `newX`, and view them by extracting the `pred
 ```python
 new_predictions = results.get_prediction(newX)
 new_predictions.predicted_mean
-
 ```
 We can produce confidence intervals for the predicted values.
 
 ```python
 new_predictions.conf_int(alpha=0.05)
-
 ```
 Prediction intervals are computing by setting `obs=True`:
 
 ```python
 new_predictions.conf_int(obs=True, alpha=0.05)
-
 ```
  For instance, the 95% confidence interval associated with an
  `lstat`  value of 10 is (24.47, 25.63), and the 95% prediction
@@ -279,7 +261,6 @@ def abline(ax, b, m):
     xlim = ax.get_xlim()
     ylim = [m * xlim[0] + b, m * xlim[1] + b]
     ax.plot(xlim, ylim)
-
 ```
  A few things are illustrated above. First we see the syntax for defining a function:
 `def funcname(...)`. The function has arguments `ax, b, m`
@@ -293,7 +274,6 @@ def abline(ax, b, m, *args, **kwargs):
     xlim = ax.get_xlim()
     ylim = [m * xlim[0] + b, m * xlim[1] + b]
     ax.plot(xlim, ylim, *args, **kwargs)
-
 ```
 The addition of `*args` allows any number of
 non-named arguments to `abline`, while `*kwargs` allows any
@@ -309,12 +289,7 @@ Let’s use our new function to add this regression line to a plot of
 
 ```python
 ax = Boston.plot.scatter("lstat", "medv")
-abline(ax,
-       results.params[0],
-       results.params[1],
-       "r--",
-       linewidth=3)
-
+abline(ax, results.params[0], results.params[1], "r--", linewidth=3)
 ```
 Thus, the final call to `ax.plot()` is `ax.plot(xlim, ylim, 'r--', linewidth=3)`.
 We have used the argument `'r--'` to produce a red dashed line, and added
@@ -334,12 +309,11 @@ as the first value from `subplots()`, we simply
 capture the second returned value in `ax` below.
 
 ```python
-ax = subplots(figsize=(8,8))[1]
+ax = subplots(figsize=(8, 8))[1]
 ax.scatter(results.fittedvalues, results.resid)
 ax.set_xlabel("Fitted value")
 ax.set_ylabel("Residual")
 ax.axhline(0, c="k", ls="--");
-
 ```
  We add a horizontal line at 0 for reference using the
  `ax.axhline()`   method, indicating
@@ -352,12 +326,11 @@ Leverage statistics can be computed for any number of predictors using the
 
 ```python
 infl = results.get_influence()
-ax = subplots(figsize=(8,8))[1]
+ax = subplots(figsize=(8, 8))[1]
 ax.scatter(np.arange(X.shape[0]), infl.hat_matrix_diag)
 ax.set_xlabel("Index")
 ax.set_ylabel("Leverage")
 np.argmax(infl.hat_matrix_diag)
-
 ```
  The `np.argmax()`  function identifies the index of the largest element of an array, optionally computed over an axis of the array.
 In this case, we maximized over the entire array
@@ -386,7 +359,6 @@ Instead, we can use the following short-hand:\definelongblankMR{columns.drop()}{
 ```python
 terms = Boston.columns.drop("medv")
 terms
-
 ```
 
 We can now fit the model with all the variables in `terms` using
@@ -397,7 +369,6 @@ X = MS(terms).fit_transform(Boston)
 model = sm.OLS(y, X)
 results = model.fit()
 summarize(results)
-
 ```
 
 What if we would like to perform a regression using all of the variables but one?  For
@@ -410,7 +381,6 @@ minus_age = Boston.columns.drop(["medv", "age"])
 Xma = MS(minus_age).fit_transform(Boston)
 model1 = sm.OLS(y, Xma)
 summarize(model1.fit())
-
 ```
 
 ## Multivariate Goodness of Fit
@@ -439,12 +409,9 @@ beyond our scope here. Let's look at an example. We compute the VIF for each of 
 in the model matrix `X`, using the function `variance_inflation_factor()`.
 
 ```python
-vals = [VIF(X, i)
-        for i in range(1, X.shape[1])]
-vif = pd.DataFrame({"vif":vals},
-                   index=X.columns[1:])
+vals = [VIF(X, i) for i in range(1, X.shape[1])]
+vif = pd.DataFrame({"vif": vals}, index=X.columns[1:])
 vif
-
 ```
 The function `VIF()` takes two arguments: a dataframe or array,
 and a variable column index. In the code above we call `VIF()` on the fly for all columns in `X`.  
@@ -456,7 +423,6 @@ The object `vals` above could have been constructed with the following for loop:
 vals = []
 for i in range(1, X.values.shape[1]):
     vals.append(VIF(X.values, i))
-
 ```
 List comprehension allows us to perform such repetitive operations in a more straightforward way.
 ## Interaction Terms
@@ -466,12 +432,9 @@ matrix builder to include an interaction term between
  `lstat`  and  `age`.
 
 ```python
-X = MS(["lstat",
-        "age",
-        ("lstat", "age")]).fit_transform(Boston)
+X = MS(["lstat", "age", ("lstat", "age")]).fit_transform(Boston)
 model2 = sm.OLS(y, X)
 summarize(model2.fit())
-
 ```
 
 ## Non-linear Transformations of the Predictors
@@ -486,7 +449,6 @@ X = MS([poly("lstat", degree=2), "age"]).fit_transform(Boston)
 model3 = sm.OLS(y, X)
 results3 = model3.fit()
 summarize(results3)
-
 ```
 The effectively zero *p*-value associated with the quadratic term
 (i.e. the third row above) suggests that it leads to an improved model.
@@ -508,7 +470,6 @@ superior to the linear fit.
 
 ```python
 anova_lm(results1, results3)
-
 ```
 Here `results1` represents the linear submodel containing
 predictors `lstat` and `age`,
@@ -534,12 +495,11 @@ That also explains why their are `NaN`s in the first row above, since
 there is no previous model with which to compare the first.
 
 ```python
-ax = subplots(figsize=(8,8))[1]
+ax = subplots(figsize=(8, 8))[1]
 ax.scatter(results3.fittedvalues, results3.resid)
 ax.set_xlabel("Fitted value")
 ax.set_ylabel("Residual")
 ax.axhline(0, c="k", ls="--");
-
 ```
 We see that when the quadratic term is included in the model,
 there is little discernible pattern in the residuals.
@@ -555,7 +515,6 @@ predictors.
 ```python
 Carseats = load_data("Carseats")
 Carseats.columns
-
 ```
 The `Carseats`  
  data includes qualitative predictors such as
@@ -573,12 +532,10 @@ Below we fit a multiple regression model that includes some interaction terms.
 ```python
 allvars = list(Carseats.columns.drop("Sales"))
 y = Carseats["Sales"]
-final = allvars + [("Income", "Advertising"),
-                   ("Price", "Age")]
+final = allvars + [("Income", "Advertising"), ("Price", "Age")]
 X = MS(final).fit_transform(Carseats)
 model = sm.OLS(y, X)
 summarize(model.fit())
-
 ```
 In the first line above, we made `allvars` a list, so that we
 could add the interaction terms two lines down. 

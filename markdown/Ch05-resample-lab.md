@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -29,7 +29,6 @@ from ISLP import load_data
 from ISLP.models import ModelSpec as MS
 from ISLP.models import poly, summarize
 from sklearn.model_selection import train_test_split
-
 ```
 
 There are several new imports needed for this lab.
@@ -40,7 +39,6 @@ from functools import partial
 from ISLP.models import sklearn_sm
 from sklearn.base import clone
 from sklearn.model_selection import KFold, ShuffleSplit, cross_validate
-
 ```
 
 ## The Validation Set Approach
@@ -59,10 +57,7 @@ with the argument `random_state=0`.
 
 ```python
 Auto = load_data("Auto")
-Auto_train, Auto_valid = train_test_split(Auto,
-                                         test_size=196,
-                                         random_state=0)
-
+Auto_train, Auto_valid = train_test_split(Auto, test_size=196, random_state=0)
 ```
 
 Now we can fit a linear regression using only the observations corresponding to the training set `Auto_train`.
@@ -73,7 +68,6 @@ X_train = hp_mm.fit_transform(Auto_train)
 y_train = Auto_train["mpg"]
 model = sm.OLS(y_train, X_train)
 results = model.fit()
-
 ```
 
 We now use the `predict()` method of `results` evaluated on the model matrix for this model
@@ -83,8 +77,7 @@ created using the validation data set. We also calculate the validation MSE of o
 X_valid = hp_mm.transform(Auto_valid)
 y_valid = Auto_valid["mpg"]
 valid_pred = results.predict(X_valid)
-np.mean((y_valid - valid_pred)**2)
-
+np.mean((y_valid - valid_pred) ** 2)
 ```
 
 Hence our estimate for the validation MSE of  the linear regression
@@ -95,23 +88,18 @@ higher-degree polynomial regressions. We first provide a function `evalMSE()` th
 as a training and test set and returns the MSE on the test set.
 
 ```python
-def evalMSE(terms,
-            response,
-            train,
-            test):
+def evalMSE(terms, response, train, test):
+    mm = MS(terms)
+    X_train = mm.fit_transform(train)
+    y_train = train[response]
 
-   mm = MS(terms)
-   X_train = mm.fit_transform(train)
-   y_train = train[response]
+    X_test = mm.transform(test)
+    y_test = test[response]
 
-   X_test = mm.transform(test)
-   y_test = test[response]
+    results = sm.OLS(y_train, X_train).fit()
+    test_pred = results.predict(X_test)
 
-   results = sm.OLS(y_train, X_train).fit()
-   test_pred = results.predict(X_test)
-
-   return np.mean((y_test - test_pred)**2)
-
+    return np.mean((y_test - test_pred) ** 2)
 ```
 
 Let’s use this function to estimate the validation MSE
@@ -122,12 +110,8 @@ over a for loop.
 ```python
 MSE = np.zeros(3)
 for idx, degree in enumerate(range(1, 4)):
-    MSE[idx] = evalMSE([poly("horsepower", degree)],
-                       "mpg",
-                       Auto_train,
-                       Auto_valid)
+    MSE[idx] = evalMSE([poly("horsepower", degree)], "mpg", Auto_train, Auto_valid)
 MSE
-
 ```
 
 These error rates are $23.62, 18.76$, and $18.80$, respectively. If we
@@ -135,15 +119,10 @@ choose a different training/validation split instead, then we
 can expect somewhat different errors on the validation set.
 
 ```python
-Auto_train, Auto_valid = train_test_split(Auto,
-                                          test_size=196,
-                                          random_state=3)
+Auto_train, Auto_valid = train_test_split(Auto, test_size=196, random_state=3)
 MSE = np.zeros(3)
 for idx, degree in enumerate(range(1, 4)):
-    MSE[idx] = evalMSE([poly("horsepower", degree)],
-                       "mpg",
-                       Auto_train,
-                       Auto_valid)
+    MSE[idx] = evalMSE([poly("horsepower", degree)], "mpg", Auto_train, Auto_valid)
 MSE
 ```
 
@@ -182,16 +161,11 @@ is passed as `model_args={'family':sm.families.Binomial()}`.
 Here is our wrapper in action:
 
 ```python
-hp_model = sklearn_sm(sm.OLS,
-                      MS(["horsepower"]))
+hp_model = sklearn_sm(sm.OLS, MS(["horsepower"]))
 X, Y = Auto.drop(columns=["mpg"]), Auto["mpg"]
-cv_results = cross_validate(hp_model,
-                            X,
-                            Y,
-                            cv=Auto.shape[0])
+cv_results = cross_validate(hp_model, X, Y, cv=Auto.shape[0])
 cv_err = np.mean(cv_results["test_score"])
 cv_err
-
 ```
 The arguments to `cross_validate()` are as follows: an
 object with the appropriate `fit()`, `predict()`,
@@ -216,15 +190,11 @@ vector. This command may take a couple of seconds to run.
 cv_error = np.zeros(5)
 H = np.array(Auto["horsepower"])
 M = sklearn_sm(sm.OLS)
-for i, d in enumerate(range(1,6)):
-    X = np.power.outer(H, np.arange(d+1))
-    M_CV = cross_validate(M,
-                          X,
-                          Y,
-                          cv=Auto.shape[0])
+for i, d in enumerate(range(1, 6)):
+    X = np.power.outer(H, np.arange(d + 1))
+    M_CV = cross_validate(M, X, Y, cv=Auto.shape[0])
     cv_error[i] = np.mean(M_CV["test_score"])
 cv_error
-
 ```
 As in Figure~\ref{Ch5:cvplot}, we see a sharp drop in the estimated test MSE between the linear and
 quadratic fits, but then no clear improvement from using higher-degree polynomials.
@@ -242,7 +212,6 @@ two arrays.
 A = np.array([3, 5, 9])
 B = np.array([2, 4])
 np.add.outer(A, B)
-
 ```
 
 In the CV example above, we used $K=n$, but of course we can also use $K<n$. The code is very similar
@@ -251,18 +220,12 @@ polynomial fits of degrees one to five.
 
 ```python
 cv_error = np.zeros(5)
-cv = KFold(n_splits=10,
-           shuffle=True,
-           random_state=0) # use same splits for each degree
-for i, d in enumerate(range(1,6)):
-    X = np.power.outer(H, np.arange(d+1))
-    M_CV = cross_validate(M,
-                          X,
-                          Y,
-                          cv=cv)
+cv = KFold(n_splits=10, shuffle=True, random_state=0)  # use same splits for each degree
+for i, d in enumerate(range(1, 6)):
+    X = np.power.outer(H, np.arange(d + 1))
+    M_CV = cross_validate(M, X, Y, cv=cv)
     cv_error[i] = np.mean(M_CV["test_score"])
 cv_error
-
 ```
 Notice that the computation time is much shorter than that of LOOCV.
 (In principle, the computation time for LOOCV for a least squares
@@ -278,29 +241,27 @@ different splitting mechanisms as an argument. For instance, one can use the `Sh
 the validation set approach just as easily as K-fold cross-validation.
 
 ```python
-validation = ShuffleSplit(n_splits=1,
-                          test_size=196,
-                          random_state=0)
-results = cross_validate(hp_model,
-                         Auto.drop(["mpg"], axis=1),
-                         Auto["mpg"],
-                         cv=validation)
+validation = ShuffleSplit(n_splits=1, test_size=196, random_state=0)
+results = cross_validate(
+    hp_model,
+    Auto.drop(["mpg"], axis=1),
+    Auto["mpg"],
+    cv=validation,
+)
 results["test_score"]
-
 ```
 
 One can estimate the variability in the test error by running the following:
 
 ```python
-validation = ShuffleSplit(n_splits=10,
-                          test_size=196,
-                          random_state=0)
-results = cross_validate(hp_model,
-                         Auto.drop(["mpg"], axis=1),
-                         Auto["mpg"],
-                         cv=validation)
+validation = ShuffleSplit(n_splits=10, test_size=196, random_state=0)
+results = cross_validate(
+    hp_model,
+    Auto.drop(["mpg"], axis=1),
+    Auto["mpg"],
+    cv=validation,
+)
 results["test_score"].mean(), results["test_score"].std()
-
 ```
 
 Note that this standard deviation is not a valid estimate of the
@@ -338,11 +299,11 @@ the selected observations.
 
 ```python
 Portfolio = load_data("Portfolio")
-def alpha_func(D, idx):
-   cov_ = np.cov(D[["X","Y"]].loc[idx], rowvar=False)
-   return ((cov_[1,1] - cov_[0,1]) /
-           (cov_[0,0]+cov_[1,1]-2*cov_[0,1]))
 
+
+def alpha_func(D, idx):
+    cov_ = np.cov(D[["X", "Y"]].loc[idx], rowvar=False)
+    return (cov_[1, 1] - cov_[0, 1]) / (cov_[0, 0] + cov_[1, 1] - 2 * cov_[0, 1])
 ```
 This function returns an estimate for $\alpha$
 based on applying the minimum
@@ -361,10 +322,7 @@ based on the new data set.
 
 ```python
 rng = np.random.default_rng(0)
-alpha_func(Portfolio,
-           rng.choice(100,
-                      100,
-                      replace=True))
+alpha_func(Portfolio, rng.choice(100, 100, replace=True))
 ```
 
 This process can be generalized to create a simple function `boot_SE()` for
@@ -372,22 +330,16 @@ computing the bootstrap standard error for arbitrary
 functions that take only a data frame as an argument.
 
 ```python
-def boot_SE(func,
-            D,
-            n=None,
-            B=1000,
-            seed=0):
+def boot_SE(func, D, n=None, B=1000, seed=0):
     rng = np.random.default_rng(seed)
     first_, second_ = 0, 0
     n = n or D.shape[0]
     for _ in range(B):
-        idx = rng.choice(D.index,
-                         n,
-                         replace=True)
+        idx = rng.choice(D.index, n, replace=True)
         value = func(D, idx)
         first_ += value
         second_ += value**2
-    return np.sqrt(second_ / B - (first_ / B)**2)
+    return np.sqrt(second_ / B - (first_ / B) ** 2)
 ```
 Notice the use of `_` as a loop variable in `for _ in range(B)`. This is often used if the value of the counter is
 unimportant and simply makes sure  the loop is executed `B` times.
@@ -396,12 +348,8 @@ Let’s use our function to evaluate the accuracy of our
 estimate of $\alpha$ using $B=1{,}000$ bootstrap replications. 
 
 ```python
-alpha_SE = boot_SE(alpha_func,
-                   Portfolio,
-                   B=1000,
-                   seed=0)
+alpha_SE = boot_SE(alpha_func, Portfolio, B=1000, seed=0)
 alpha_SE
-
 ```
 
 The final output shows that the bootstrap estimate for ${\rm SE}(\hat{\alpha})$ is $0.0912$.
@@ -448,7 +396,6 @@ left. We use it to freeze the first two model-formula arguments of `boot_OLS()`.
 
 ```python
 hp_func = partial(boot_OLS, MS(["horsepower"]), "mpg")
-
 ```
 Typing `hp_func?` will show that it has two arguments `D`
 and `idx` --- it is a version of `boot_OLS()` with the first
@@ -461,22 +408,14 @@ demonstrate its utility on 10 bootstrap samples.
 
 ```python
 rng = np.random.default_rng(0)
-np.array([hp_func(Auto,
-          rng.choice(Auto.index,
-                     392,
-                     replace=True)) for _ in range(10)])
-
+np.array([hp_func(Auto, rng.choice(Auto.index, 392, replace=True)) for _ in range(10)])
 ```
 Next, we use the `boot_SE()` {}  function to compute the standard
 errors of 1,000 bootstrap estimates for the intercept and slope terms.
 
 ```python
-hp_se = boot_SE(hp_func,
-                Auto,
-                B=1000,
-                seed=10)
+hp_se = boot_SE(hp_func, Auto, B=1000, seed=10)
 hp_se
-
 ```
 
 This indicates that the bootstrap estimate for ${\rm SE}(\hat{\beta}_0)$ is
@@ -492,7 +431,6 @@ from `ISLP.sm`.
 hp_model.fit(Auto, Auto["mpg"])
 model_se = summarize(hp_model.results_)["std err"]
 model_se
-
 ```
 
 The standard error estimates for $\hat{\beta}_0$ and $\hat{\beta}_1$
@@ -530,19 +468,14 @@ ${\rm SE}(\hat{\beta}_2)$.
 
 ```python
 quad_model = MS([poly("horsepower", 2, raw=True)])
-quad_func = partial(boot_OLS,
-                    quad_model,
-                    "mpg")
+quad_func = partial(boot_OLS, quad_model, "mpg")
 boot_SE(quad_func, Auto, B=1000)
-
 ```
 
 We  compare the results to the standard errors computed using `sm.OLS()`.
 
 ```python
-M = sm.OLS(Auto["mpg"],
-           quad_model.fit_transform(Auto))
+M = sm.OLS(Auto["mpg"], quad_model.fit_transform(Auto))
 summarize(M.fit())["std err"]
-
 ```
 

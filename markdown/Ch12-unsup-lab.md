@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -30,7 +30,6 @@ from ISLP import load_data
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from statsmodels.datasets import get_rdataset
-
 ```
 We also collect the new imports
 needed for this lab.
@@ -39,7 +38,6 @@ needed for this lab.
 from ISLP.cluster import compute_linkage
 from scipy.cluster.hierarchy import cut_tree, dendrogram
 from sklearn.cluster import AgglomerativeClustering, KMeans
-
 ```
 
 ## Principal Components Analysis
@@ -53,21 +51,18 @@ The rows of the data set contain the 50 states, in alphabetical order.
 ```python
 USArrests = get_rdataset("USArrests").data
 USArrests
-
 ```
 
 The columns of the data set contain the four variables.
 
 ```python
 USArrests.columns
-
 ```
 
 We first briefly examine the data. We notice that the variables have vastly different means.
 
 ```python
 USArrests.mean()
-
 ```
 
 Dataframes have several useful methods for computing
@@ -76,7 +71,6 @@ variance of the four variables using the `var()`  method.
 
 ```python
 USArrests.var()
-
 ```
 
 Not surprisingly, the variables also have vastly different variances.
@@ -96,10 +90,8 @@ deviations and then apply it to our data using the
 `transform` method. As before, we combine these steps using the `fit_transform()` method.
 
 ```python
-scaler = StandardScaler(with_std=True,
-                        with_mean=True)
+scaler = StandardScaler(with_std=True, with_mean=True)
 USArrests_scaled = scaler.fit_transform(USArrests)
-
 ```
 Having scaled the data, we can then
 perform principal components analysis using the `PCA()` transform
@@ -107,7 +99,6 @@ from the `sklearn.decomposition` package.
 
 ```python
 pcaUS = PCA()
-
 ```
 (By default, the `PCA()`  transform centers the variables to have
 mean zero though it does not scale them.) The transform `pcaUS`
@@ -116,7 +107,6 @@ can be used to find the PCA
 
 ```python
 pcaUS.fit(USArrests_scaled)
-
 ```
 
 After fitting, the `mean_` attribute corresponds to the means
@@ -125,7 +115,6 @@ of the variables. In this case, since we centered and scaled the data with
 
 ```python
 pcaUS.mean_
-
 ```
 
 The scores can be computed using the `transform()` method
@@ -133,7 +122,6 @@ of `pcaUS` after it has been fit.
 
 ```python
 scores = pcaUS.transform(USArrests_scaled)
-
 ```
 We will plot these scores a bit further down.
 The `components_` attribute provides the principal component loadings:
@@ -142,7 +130,6 @@ principal component loading vector.
 
 ```python
 pcaUS.components_
-
 ```
 
 The `biplot`  is a common visualization method used with
@@ -152,17 +139,14 @@ packages that do produce such plots. Here we
 make a simple biplot manually.
 
 ```python
-i, j = 0, 1 # which components
+i, j = 0, 1  # which components
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ax.scatter(scores[:,0], scores[:,1])
-ax.set_xlabel("PC%d" % (i+1))
-ax.set_ylabel("PC%d" % (j+1))
+ax.scatter(scores[:, 0], scores[:, 1])
+ax.set_xlabel("PC%d" % (i + 1))
+ax.set_ylabel("PC%d" % (j + 1))
 for k in range(pcaUS.components_.shape[1]):
-    ax.arrow(0, 0, pcaUS.components_[i,k], pcaUS.components_[j,k])
-    ax.text(pcaUS.components_[i,k],
-            pcaUS.components_[j,k],
-            USArrests.columns[k])
-
+    ax.arrow(0, 0, pcaUS.components_[i, k], pcaUS.components_[j, k])
+    ax.text(pcaUS.components_[i, k], pcaUS.components_[j, k], USArrests.columns[k])
 ```
 Notice that this figure is a reflection of Figure~\ref{Ch10:fig:USArrests:obs} through the $y$-axis. Recall that the
 principal components are only unique up to a sign change, so we can
@@ -172,18 +156,19 @@ We also increase the length of the arrows to emphasize the loadings.
 
 ```python
 scale_arrow = s_ = 2
-scores[:,1] *= -1
-pcaUS.components_[1] *= -1 # flip the y-axis
+scores[:, 1] *= -1
+pcaUS.components_[1] *= -1  # flip the y-axis
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ax.scatter(scores[:,0], scores[:,1])
-ax.set_xlabel("PC%d" % (i+1))
-ax.set_ylabel("PC%d" % (j+1))
+ax.scatter(scores[:, 0], scores[:, 1])
+ax.set_xlabel("PC%d" % (i + 1))
+ax.set_ylabel("PC%d" % (j + 1))
 for k in range(pcaUS.components_.shape[1]):
-    ax.arrow(0, 0, s_*pcaUS.components_[i,k], s_*pcaUS.components_[j,k])
-    ax.text(s_*pcaUS.components_[i,k],
-            s_*pcaUS.components_[j,k],
-            USArrests.columns[k])
-
+    ax.arrow(0, 0, s_ * pcaUS.components_[i, k], s_ * pcaUS.components_[j, k])
+    ax.text(
+        s_ * pcaUS.components_[i, k],
+        s_ * pcaUS.components_[j, k],
+        USArrests.columns[k],
+    )
 ```
 
 The standard deviations of the principal component scores are as follows:
@@ -197,14 +182,12 @@ the `explained_variance_` attribute.
 
 ```python
 pcaUS.explained_variance_
-
 ```
 The proportion of variance explained by each principal 
 component (PVE) is stored as `explained_variance_ratio_`:
 
 ```python
 pcaUS.explained_variance_ratio_
-
 ```
 We see that the first principal component explains 62.0% of the
 variance in the data, the next principal component explains 24.7%
@@ -215,39 +198,32 @@ plot the proportion of variance explained.
 ```python
 %%capture
 fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-ticks = np.arange(pcaUS.n_components_)+1
+ticks = np.arange(pcaUS.n_components_) + 1
 ax = axes[0]
-ax.plot(ticks,
-        pcaUS.explained_variance_ratio_,
-        marker="o")
+ax.plot(ticks, pcaUS.explained_variance_ratio_, marker="o")
 ax.set_xlabel("Principal Component")
 ax.set_ylabel("Proportion of Variance Explained")
-ax.set_ylim([0,1])
+ax.set_ylim([0, 1])
 ax.set_xticks(ticks)
-
 ```
 Notice the use of `%%capture`, which suppresses the displaying of the partially completed figure.
 
 ```python
 ax = axes[1]
-ax.plot(ticks,
-        pcaUS.explained_variance_ratio_.cumsum(),
-        marker="o")
+ax.plot(ticks, pcaUS.explained_variance_ratio_.cumsum(), marker="o")
 ax.set_xlabel("Principal Component")
 ax.set_ylabel("Cumulative Proportion of Variance Explained")
 ax.set_ylim([0, 1])
 ax.set_xticks(ticks)
 fig
-
 ```
 The result is similar to that shown in Figure~\ref{Ch10:fig:USArrests:scree}.  Note
 that the method `cumsum()`   computes the cumulative sum of
 the elements of a numeric vector. For instance:
 
 ```python
-a = np.array([1,2,8,-3])
+a = np.array([1, 2, 8, -3])
 np.cumsum(a)
-
 ```
 ## Matrix Completion
 
@@ -266,7 +242,6 @@ and centered `USArrests` data as $\bf X$ below. The *singular value decompositio
 X = USArrests_scaled
 U, D, V = np.linalg.svd(X, full_matrices=False)
 U.shape, D.shape, V.shape
-
 ```
 The `np.linalg.svd()` function returns three components, `U`, `D` and `V`. The matrix `V` is equivalent to the
 loading matrix from principal components (up to an unimportant sign flip). Using the `full_matrices=False` option ensures that
@@ -274,23 +249,19 @@ for a tall matrix the shape of `U` is the same as the shape of `X`.
 
 ```python
 V
-
 ```
 
 ```python
 pcaUS.components_
-
 ```
 The matrix `U` corresponds to a  *standardized* version of the PCA score matrix (each column standardized to have sum-of-squares one). If we multiply each column of `U` by the corresponding element  of `D`, we recover the PCA scores exactly (up to a meaningless sign flip).
 
 ```python
-(U * D[None,:])[:3]
-
+(U * D[None, :])[:3]
 ```
 
 ```python
 scores[:3]
-
 ```
 While it would be possible to carry out this lab using the `PCA()` estimator,
 here we use the `np.linalg.svd()` function in order to illustrate its use.
@@ -303,15 +274,10 @@ at least three observed values.
 ```python
 n_omit = 20
 np.random.seed(15)
-r_idx = np.random.choice(np.arange(X.shape[0]),
-                         n_omit,
-                         replace=False)
-c_idx = np.random.choice(np.arange(X.shape[1]),
-                         n_omit,
-                         replace=True)
+r_idx = np.random.choice(np.arange(X.shape[0]), n_omit, replace=False)
+c_idx = np.random.choice(np.arange(X.shape[1]), n_omit, replace=True)
 Xna = X.copy()
 Xna[r_idx, c_idx] = np.nan
-
 ```
 
 Here the array `r_idx`
@@ -325,9 +291,8 @@ This will be needed in Step 2 of Algorithm~\ref{Ch10:alg:hardimpute}.
 ```python
 def low_rank(X, M=1):
     U, D, V = np.linalg.svd(X)
-    L = U[:,:M] * D[None,:M]
+    L = U[:, :M] * D[None, :M]
     return L.dot(V[:M])
-
 ```
 To conduct Step 1 of the algorithm, we initialize `Xhat` --- this is $\tilde{\bf X}$ in Algorithm~\ref{Ch10:alg:hardimpute} ---  by replacing
 the missing values with the column means of the non-missing entries. These are stored in
@@ -339,7 +304,6 @@ values in `Xna`.
 Xhat = Xna.copy()
 Xbar = np.nanmean(Xhat, axis=0)
 Xhat[r_idx, c_idx] = Xbar[c_idx]
-
 ```
 
 Before we begin Step 2, we set ourselves up to measure the progress of our
@@ -350,9 +314,8 @@ thresh = 1e-7
 rel_err = 1
 count = 0
 ismiss = np.isnan(Xna)
-mssold = np.mean(Xhat[~ismiss]**2)
-mss0 = np.mean(Xna[~ismiss]**2)
-
+mssold = np.mean(Xhat[~ismiss] ** 2)
+mss0 = np.mean(Xna[~ismiss] ** 2)
 ```
 Here  `ismiss` is a logical matrix with the same dimensions as `Xna`;
 a given element is `True` if the corresponding matrix element is missing. The notation `~ismiss` negates this boolean vector. This is useful
@@ -373,12 +336,12 @@ while rel_err > thresh:
     # Step 2(b)
     Xhat[ismiss] = Xapp[ismiss]
     # Step 2(c)
-    mss = np.mean(((Xna - Xapp)[~ismiss])**2)
+    mss = np.mean(((Xna - Xapp)[~ismiss]) ** 2)
     rel_err = (mssold - mss) / mss0
     mssold = mss
-    print(f"Iteration: {count}, MSS:{mss:.3f}, Rel.Err {rel_err:.2e}",
-          )
-
+    print(
+        f"Iteration: {count}, MSS:{mss:.3f}, Rel.Err {rel_err:.2e}",
+    )
 ```
 
 We see that after eight iterations, the relative error has fallen below `thresh = 1e-7`, and so the algorithm terminates. When this happens, the mean squared error of the non-missing elements equals 0.381.
@@ -387,8 +350,7 @@ Finally, we compute the correlation between the 20 imputed values
 and the actual values:
 
 ```python
-np.corrcoef(Xapp[ismiss], X[ismiss])[0,1]
-
+np.corrcoef(Xapp[ismiss], X[ismiss])[0, 1]
 ```
 
 In this lab, we implemented  Algorithm~\ref{Ch10:alg:hardimpute}  ourselves for didactic purposes. However, a reader who wishes to apply matrix completion to their data might look to more specialized `Python`{} implementations.
@@ -404,24 +366,19 @@ mean shift relative to the next 25 observations.
 
 ```python
 np.random.seed(0)
-X = np.random.standard_normal((50,2))
-X[:25,0] += 3
-X[:25,1] -= 4;
-
+X = np.random.standard_normal((50, 2))
+X[:25, 0] += 3
+X[:25, 1] -= 4
 ```
 We now perform $K$-means clustering with $K=2$.
 
 ```python
-kmeans = KMeans(n_clusters=2,
-                random_state=2,
-                n_init=20).fit(X)
-
+kmeans = KMeans(n_clusters=2, random_state=2, n_init=20).fit(X)
 ```
 We specify `random_state` to make the results reproducible.  The cluster assignments of the 50 observations are contained in `kmeans.labels_`.
 
 ```python
 kmeans.labels_
-
 ```
 The $K$-means clustering perfectly separated the observations into two
 clusters even though we did not supply any group information to
@@ -429,10 +386,9 @@ clusters even though we did not supply any group information to
 colored according to its cluster assignment.
 
 ```python
-fig, ax = plt.subplots(1, 1, figsize=(8,8))
-ax.scatter(X[:,0], X[:,1], c=kmeans.labels_)
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+ax.scatter(X[:, 0], X[:, 1], c=kmeans.labels_)
 ax.set_title("K-Means Clustering Results with K=2");
-
 ```
 
 Here the observations can be easily plotted because they are
@@ -447,13 +403,10 @@ instead have performed $K$-means clustering on this example with
 $K=3$.
 
 ```python
-kmeans = KMeans(n_clusters=3,
-                random_state=3,
-                n_init=20).fit(X)
-fig, ax = plt.subplots(figsize=(8,8))
-ax.scatter(X[:,0], X[:,1], c=kmeans.labels_)
+kmeans = KMeans(n_clusters=3, random_state=3, n_init=20).fit(X)
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.scatter(X[:, 0], X[:, 1], c=kmeans.labels_)
 ax.set_title("K-Means Clustering Results with K=3");
-
 ```
 When $K=3$, $K$-means clustering  splits up the two clusters.
 We have used the `n_init` argument to run the $K$-means with 20 
@@ -465,14 +418,9 @@ function will report only the best results. Here we compare using
 `n_init=1` to `n_init=20`.
 
 ```python
-kmeans1 = KMeans(n_clusters=3,
-                random_state=3,
-                n_init=1).fit(X)
-kmeans20 = KMeans(n_clusters=3,
-                  random_state=3,
-                  n_init=20).fit(X)
+kmeans1 = KMeans(n_clusters=3, random_state=3, n_init=1).fit(X)
+kmeans20 = KMeans(n_clusters=3, random_state=3, n_init=20).fit(X)
 kmeans1.inertia_, kmeans20.inertia_
-
 ```
 Note that `kmeans.inertia_` is the total within-cluster sum
 of squares, which we seek to minimize by performing $K$-means
@@ -502,26 +450,18 @@ clustering observations using complete linkage.
 
 ```python
 HClust = AgglomerativeClustering
-hc_comp = HClust(distance_threshold=0,
-                 n_clusters=None,
-                 linkage="complete")
+hc_comp = HClust(distance_threshold=0, n_clusters=None, linkage="complete")
 hc_comp.fit(X)
-
 ```
 
 This computes the entire dendrogram.
 We could just as easily perform hierarchical clustering with average or single linkage instead:
 
 ```python
-hc_avg = HClust(distance_threshold=0,
-                n_clusters=None,
-                linkage="average")
+hc_avg = HClust(distance_threshold=0, n_clusters=None, linkage="average")
 hc_avg.fit(X)
-hc_sing = HClust(distance_threshold=0,
-                 n_clusters=None,
-                 linkage="single")
+hc_sing = HClust(distance_threshold=0, n_clusters=None, linkage="single")
 hc_sing.fit(X);
-
 ```
 
 To use a precomputed distance matrix, we provide an additional
@@ -531,13 +471,14 @@ argument `metric="precomputed"`. In the code below, the first four lines compute
 D = np.zeros((X.shape[0], X.shape[0]))
 for i in range(X.shape[0]):
     x_ = np.multiply.outer(np.ones(X.shape[0]), X[i])
-    D[i] = np.sqrt(np.sum((X - x_)**2, 1))
-hc_sing_pre = HClust(distance_threshold=0,
-                     n_clusters=None,
-                     metric="precomputed",
-                     linkage="single")
+    D[i] = np.sqrt(np.sum((X - x_) ** 2, 1))
+hc_sing_pre = HClust(
+    distance_threshold=0,
+    n_clusters=None,
+    metric="precomputed",
+    linkage="single",
+)
 hc_sing_pre.fit(D)
-
 ```
 
 We use
@@ -553,14 +494,10 @@ color different branches of the tree that suggests a pre-defined cut of the tree
 We prefer to overwrite this default by setting this threshold to be infinite. Since we want this behavior for many dendrograms, we store these values in a dictionary `cargs` and pass this as keyword arguments using the notation `**cargs`.
 
 ```python
-cargs = {"color_threshold":-np.inf,
-         "above_threshold_color":"black"}
+cargs = {"color_threshold": -np.inf, "above_threshold_color": "black"}
 linkage_comp = compute_linkage(hc_comp)
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-dendrogram(linkage_comp,
-           ax=ax,
-           **cargs);
-
+dendrogram(linkage_comp, ax=ax, **cargs);
 ```
 
 We may want to color branches of the tree above
@@ -570,11 +507,7 @@ coloring links that merge above 4 in black.
 
 ```python
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-dendrogram(linkage_comp,
-           ax=ax,
-           color_threshold=4,
-           above_threshold_color="black");
-
+dendrogram(linkage_comp, ax=ax, color_threshold=4, above_threshold_color="black");
 ```
 
 To determine the cluster labels for each observation associated with a
@@ -583,7 +516,6 @@ function from `scipy.cluster.hierarchy`:
 
 ```python
 cut_tree(linkage_comp, n_clusters=4).T
-
 ```
 
 This can also be achieved by providing an argument `n_clusters`
@@ -594,7 +526,6 @@ or `height` to `cut_tree()`.
 
 ```python
 cut_tree(linkage_comp, height=5)
-
 ```
 
 To scale the variables before performing hierarchical clustering of
@@ -603,14 +534,13 @@ the observations, we use `StandardScaler()`  as in our PCA example:
 ```python
 scaler = StandardScaler()
 X_scale = scaler.fit_transform(X)
-hc_comp_scale = HClust(distance_threshold=0,
-                       n_clusters=None,
-                       linkage="complete").fit(X_scale)
+hc_comp_scale = HClust(distance_threshold=0, n_clusters=None, linkage="complete").fit(
+    X_scale,
+)
 linkage_comp_scale = compute_linkage(hc_comp_scale)
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 dendrogram(linkage_comp_scale, ax=ax, **cargs)
 ax.set_title("Hierarchical Clustering with Scaled Features");
-
 ```
 
 Correlation-based distances between observations can be used for
@@ -629,16 +559,17 @@ always one. Hence, we will cluster a three-dimensional data set.
 ```python
 X = np.random.standard_normal((30, 3))
 corD = 1 - np.corrcoef(X)
-hc_cor = HClust(linkage="complete",
-                distance_threshold=0,
-                n_clusters=None,
-                metric="precomputed")
+hc_cor = HClust(
+    linkage="complete",
+    distance_threshold=0,
+    n_clusters=None,
+    metric="precomputed",
+)
 hc_cor.fit(corD)
 linkage_cor = compute_linkage(hc_cor)
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 dendrogram(linkage_cor, ax=ax, **cargs)
 ax.set_title("Complete Linkage with Correlation-Based Dissimilarity");
-
 ```
 
 ## NCI60 Data Example
@@ -652,7 +583,6 @@ measurements on 64 cancer cell lines.
 NCI60 = load_data("NCI60")
 nci_labs = NCI60["labels"]
 nci_data = NCI60["data"]
-
 ```
 
 Each cell line is labeled with a cancer type. We do not make use of
@@ -665,14 +595,12 @@ The data has 64 rows and 6830 columns.
 
 ```python
 nci_data.shape
-
 ```
 
 We begin by examining the cancer types for the cell lines.
 
 ```python
 nci_labs.value_counts()
-
 ```
 
 ### PCA on the NCI60 Data
@@ -686,7 +614,6 @@ scaler = StandardScaler()
 nci_scaled = scaler.fit_transform(nci_data)
 nci_pca = PCA()
 nci_scores = nci_pca.fit_transform(nci_scaled)
-
 ```
 
 We now plot the first few principal component score vectors, in order
@@ -697,24 +624,16 @@ to each other.
 
 ```python
 cancer_types = list(np.unique(nci_labs))
-nci_groups = np.array([cancer_types.index(lab)
-                       for lab in nci_labs.values])
-fig, axes = plt.subplots(1, 2, figsize=(15,6))
+nci_groups = np.array([cancer_types.index(lab) for lab in nci_labs.values])
+fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 ax = axes[0]
-ax.scatter(nci_scores[:,0],
-           nci_scores[:,1],
-           c=nci_groups,
-           marker="o",
-           s=50)
-ax.set_xlabel("PC1"); ax.set_ylabel("PC2")
+ax.scatter(nci_scores[:, 0], nci_scores[:, 1], c=nci_groups, marker="o", s=50)
+ax.set_xlabel("PC1")
+ax.set_ylabel("PC2")
 ax = axes[1]
-ax.scatter(nci_scores[:,0],
-           nci_scores[:,2],
-           c=nci_groups,
-           marker="o",
-           s=50)
-ax.set_xlabel("PC1"); ax.set_ylabel("PC3");
-
+ax.scatter(nci_scores[:, 0], nci_scores[:, 2], c=nci_groups, marker="o", s=50)
+ax.set_xlabel("PC1")
+ax.set_ylabel("PC3");
 ```
 On the whole, cell lines corresponding to a single cancer type do tend to
 have similar values on the first few principal component score
@@ -726,21 +645,16 @@ explained by the principal components as well as the cumulative percent variance
 This is similar to the plots we made earlier for the `USArrests` data.
 
 ```python
-fig, axes = plt.subplots(1, 2, figsize=(15,6))
+fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 ax = axes[0]
-ticks = np.arange(nci_pca.n_components_)+1
-ax.plot(ticks,
-        nci_pca.explained_variance_ratio_,
-        marker="o")
+ticks = np.arange(nci_pca.n_components_) + 1
+ax.plot(ticks, nci_pca.explained_variance_ratio_, marker="o")
 ax.set_xlabel("Principal Component")
 ax.set_ylabel("PVE")
 ax = axes[1]
-ax.plot(ticks,
-        nci_pca.explained_variance_ratio_.cumsum(),
-        marker="o")
+ax.plot(ticks, nci_pca.explained_variance_ratio_.cumsum(), marker="o")
 ax.set_xlabel("Principal Component")
 ax.set_ylabel("Cumulative PVE");
-
 ```
 We see that together, the first seven principal components explain
 around 40% of the variance in the data. This is not a huge amount
@@ -763,30 +677,26 @@ the three dendrograms.
 
 ```python
 def plot_nci(linkage, ax, cut=-np.inf):
-    cargs = {"above_threshold_color":"black",
-             "color_threshold":cut}
-    hc = HClust(n_clusters=None,
-                distance_threshold=0,
-                linkage=linkage.lower()).fit(nci_scaled)
+    cargs = {"above_threshold_color": "black", "color_threshold": cut}
+    hc = HClust(n_clusters=None, distance_threshold=0, linkage=linkage.lower()).fit(
+        nci_scaled,
+    )
     linkage_ = compute_linkage(hc)
-    dendrogram(linkage_,
-               ax=ax,
-               labels=np.asarray(nci_labs),
-               leaf_font_size=10,
-               **cargs)
+    dendrogram(linkage_, ax=ax, labels=np.asarray(nci_labs), leaf_font_size=10, **cargs)
     ax.set_title("%s Linkage" % linkage)
     return hc
-
 ```
 
 Let’s  plot our results.
 
 ```python
-fig, axes = plt.subplots(3, 1, figsize=(15,30))
-ax = axes[0]; hc_comp = plot_nci("Complete", ax)
-ax = axes[1]; hc_avg = plot_nci("Average", ax)
-ax = axes[2]; hc_sing = plot_nci("Single", ax)
-
+fig, axes = plt.subplots(3, 1, figsize=(15, 30))
+ax = axes[0]
+hc_comp = plot_nci("Complete", ax)
+ax = axes[1]
+hc_avg = plot_nci("Average", ax)
+ax = axes[2]
+hc_sing = plot_nci("Single", ax)
 ```
 We see that the
 choice of linkage certainly does affect the results
@@ -806,9 +716,7 @@ number of clusters, say four:
 ```python
 linkage_comp = compute_linkage(hc_comp)
 comp_cut = cut_tree(linkage_comp, n_clusters=4).reshape(-1)
-pd.crosstab(nci_labs["label"],
-            pd.Series(comp_cut.reshape(-1), name="Complete"))
-
+pd.crosstab(nci_labs["label"], pd.Series(comp_cut.reshape(-1), name="Complete"))
 ```
 
 There are some clear patterns. All the leukemia cell lines fall in
@@ -818,10 +726,9 @@ three different clusters.
 We can plot a cut on the dendrogram that produces these four clusters:
 
 ```python
-fig, ax = plt.subplots(figsize=(10,10))
+fig, ax = plt.subplots(figsize=(10, 10))
 plot_nci("Complete", ax, cut=140)
 ax.axhline(140, c="r", linewidth=4);
-
 ```
 
 The `axhline()`  function draws a horizontal line  line on top of any
@@ -838,12 +745,11 @@ results.  How do these `NCI60` hierarchical clustering results compare
 to what we get if we perform $K$-means clustering with $K=4$?
 
 ```python
-nci_kmeans = KMeans(n_clusters=4,
-                    random_state=0,
-                    n_init=20).fit(nci_scaled)
-pd.crosstab(pd.Series(comp_cut, name="HClust"),
-            pd.Series(nci_kmeans.labels_, name="K-means"))
-
+nci_kmeans = KMeans(n_clusters=4, random_state=0, n_init=20).fit(nci_scaled)
+pd.crosstab(
+    pd.Series(comp_cut, name="HClust"),
+    pd.Series(nci_kmeans.labels_, name="K-means"),
+)
 ```
 
 We see that the four clusters obtained using hierarchical clustering
@@ -864,23 +770,20 @@ principal component score vectors, regarding these first few components
 as a less noisy version of the data.
 
 ```python
-hc_pca = HClust(n_clusters=None,
-                distance_threshold=0,
-                linkage="complete",
-                ).fit(nci_scores[:,:5])
+hc_pca = HClust(
+    n_clusters=None,
+    distance_threshold=0,
+    linkage="complete",
+).fit(nci_scores[:, :5])
 linkage_pca = compute_linkage(hc_pca)
-fig, ax = plt.subplots(figsize=(8,8))
-dendrogram(linkage_pca,
-           labels=np.asarray(nci_labs),
-           leaf_font_size=10,
-           ax=ax,
-           **cargs)
+fig, ax = plt.subplots(figsize=(8, 8))
+dendrogram(linkage_pca, labels=np.asarray(nci_labs), leaf_font_size=10, ax=ax, **cargs)
 ax.set_title("Hier. Clust. on First Five Score Vectors")
-pca_labels = pd.Series(cut_tree(linkage_pca,
-                                n_clusters=4).reshape(-1),
-                       name="Complete-PCA")
+pca_labels = pd.Series(
+    cut_tree(linkage_pca, n_clusters=4).reshape(-1),
+    name="Complete-PCA",
+)
 pd.crosstab(nci_labs["label"], pca_labels)
-
 ```
 
  

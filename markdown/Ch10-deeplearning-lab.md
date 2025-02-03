@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -50,7 +50,6 @@ import torch
 from torch import nn
 from torch.optim import RMSprop
 from torch.utils.data import TensorDataset
-
 ```
 
 There are several other helper packages for `torch`. For instance,
@@ -68,7 +67,6 @@ We can now import from `torchinfo`.
 ```python
 from torchinfo import summary
 from torchmetrics import MeanAbsoluteError, R2Score
-
 ```
 
 The package `pytorch_lightning` is a somewhat higher-level
@@ -80,7 +78,6 @@ models by reducing the amount of boilerplate code needed
 ```python
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import CSVLogger
-
 ```
 
 In order to reproduce results we use `seed_everything()`. We will also instruct `torch` to use deterministic algorithms
@@ -91,7 +88,6 @@ from pytorch_lightning import seed_everything
 
 seed_everything(0, workers=True)
 torch.use_deterministic_algorithms(True, warn_only=True)
-
 ```
 
 We will use several datasets shipped with `torchvision` for our
@@ -117,7 +113,6 @@ of the metric over the entire validation or test data set.
 
 ```python
 from ISLP.torch import ErrorTracker, SimpleDataModule, SimpleModule, rec_num_workers
-
 ```
 
 In addition we have included some helper
@@ -132,7 +127,6 @@ the models themselves.
 
 ```python
 from ISLP.torch.imdb import load_lookup, load_sequential, load_sparse, load_tensor
-
 ```
 
 Finally, we introduce some utility imports  not directly related to
@@ -148,7 +142,6 @@ pictures in the `ResNet50` example.
 ```python
 import json
 from glob import glob
-
 ```
 
 ## Single Layer Network on Hitters Data
@@ -157,7 +150,6 @@ We start by fitting the models in Section~\ref{Ch13:sec:when-use-deep} on the `H
 ```python
 Hitters = load_data("Hitters").dropna()
 n = Hitters.shape[0]
-
 ```
  We will fit two linear models (least squares  and lasso) and  compare their performance
 to that of a neural network. For this comparison we will use mean absolute error on a validation dataset.
@@ -172,7 +164,6 @@ We set up the model matrix and the response.
 model = MS(Hitters.columns.drop("Salary"), intercept=False)
 X = model.fit_transform(Hitters).to_numpy()
 Y = Hitters["Salary"].to_numpy()
-
 ```
 The `to_numpy()`  method above converts `pandas`
 data frames or series to `numpy` arrays.
@@ -185,13 +176,12 @@ We now split the data into test and training, fixing the random
 state used by `sklearn` to do the split.
 
 ```python
-(X_train,
- X_test,
- Y_train,
- Y_test) = train_test_split(X,
-                            Y,
-                            test_size=1/3,
-                            random_state=1)
+(X_train, X_test, Y_train, Y_test) = train_test_split(
+    X,
+    Y,
+    test_size=1 / 3,
+    random_state=1,
+)
 ```
 
 ### Linear Models
@@ -213,8 +203,7 @@ and then fit the lasso without further normalization.
 ```python
 scaler = StandardScaler(with_mean=True, with_std=True)
 lasso = Lasso(warm_start=True, max_iter=30000)
-standard_lasso = Pipeline(steps=[("scaler", scaler),
-                                 ("lasso", lasso)])
+standard_lasso = Pipeline(steps=[("scaler", scaler), ("lasso", lasso)])
 ```
 
 We need to create a grid of values for $\lambda$. As is common practice, 
@@ -225,20 +214,19 @@ $\lambda$ with an  all-zero solution. This value equals the largest absolute inn
 X_s = scaler.fit_transform(X_train)
 n = X_s.shape[0]
 lam_max = np.fabs(X_s.T.dot(Y_train - Y_train.mean())).max() / n
-param_grid = {"lasso__alpha": np.exp(np.linspace(0, np.log(0.01), 100))
-             * lam_max}
+param_grid = {"lasso__alpha": np.exp(np.linspace(0, np.log(0.01), 100)) * lam_max}
 ```
 Note that we had to transform the data first, since the scale of the variables impacts the choice of $\lambda$.
 We now perform cross-validation using this sequence of $\lambda$ values.
 
 ```python
-cv = KFold(10,
-           shuffle=True,
-           random_state=1)
-grid = GridSearchCV(standard_lasso,
-                    param_grid,
-                    cv=cv,
-                    scoring="neg_mean_absolute_error")
+cv = KFold(10, shuffle=True, random_state=1)
+grid = GridSearchCV(
+    standard_lasso,
+    param_grid,
+    cv=cv,
+    scoring="neg_mean_absolute_error",
+)
 grid.fit(X_train, Y_train);
 ```
 
@@ -264,7 +252,6 @@ for the more complex examples to follow.
 
 ```python
 class HittersModel(nn.Module):
-
     def __init__(self, input_size):
         super(HittersModel, self).__init__()
         self.flatten = nn.Flatten()
@@ -272,12 +259,12 @@ class HittersModel(nn.Module):
             nn.Linear(input_size, 50),
             nn.ReLU(),
             nn.Dropout(0.4),
-            nn.Linear(50, 1))
+            nn.Linear(50, 1),
+        )
 
     def forward(self, x):
         x = self.flatten(x)
         return torch.flatten(self.sequential(x))
-
 ```
 
 The `class` statement identifies the code chunk as a
@@ -311,7 +298,6 @@ to disable dropout for when we want to evaluate the model on test data.
 
 ```python
 hit_model = HittersModel(X.shape[1])
-
 ```
 
 The object `self.sequential` is a composition of four maps. The
@@ -326,12 +312,11 @@ this information. We specify the size of the input and see the size
 of each tensor as it passes through layers of the network. 
 
 ```python
-summary(hit_model,
-        input_size=X_train.shape,
-        col_names=["input_size",
-                   "output_size",
-                   "num_params"])
-
+summary(
+    hit_model,
+    input_size=X_train.shape,
+    col_names=["input_size", "output_size", "num_params"],
+)
 ```
 We have truncated the end of the output slightly, here and in subsequent uses.
 
@@ -359,7 +344,6 @@ We do the same for the test data.
 X_test_t = torch.tensor(X_test.astype(np.float32))
 Y_test_t = torch.tensor(Y_test.astype(np.float32))
 hit_test = TensorDataset(X_test_t, Y_test_t)
-
 ```
 
 Finally, this dataset is passed to a `DataLoader()` which ultimately
@@ -400,12 +384,13 @@ as a percentage (respectively number) of the *training* observations to be used 
 If it is a `Dataset`, it is passed directly to a data loader.
 
 ```python
-hit_dm = SimpleDataModule(hit_train,
-                          hit_test,
-                          batch_size=32,
-                          num_workers=min(4, max_num_workers),
-                          validation=hit_test)
-
+hit_dm = SimpleDataModule(
+    hit_train,
+    hit_test,
+    batch_size=32,
+    num_workers=min(4, max_num_workers),
+    validation=hit_test,
+)
 ```
 
 Next we must provide a `pytorch_lightning` module that controls
@@ -417,9 +402,7 @@ are controlled by the methods `SimpleModule.[training/test/validation]_step()`, 
 we will not be modifying these in our examples.
 
 ```python
-hit_module = SimpleModule.regression(hit_model,
-                           metrics={"mae":MeanAbsoluteError()})
-
+hit_module = SimpleModule.regression(hit_model, metrics={"mae": MeanAbsoluteError()})
 ```
 
  By using the `SimpleModule.regression()` method,  we indicate that we will use squared-error loss as in
@@ -452,11 +435,13 @@ and, finally, the test error.
 We now fit the model for 50 epochs.
 
 ```python
-hit_trainer = Trainer(deterministic=True,
-                      max_epochs=50,
-                      log_every_n_steps=5,
-                      logger=hit_logger,
-                      callbacks=[ErrorTracker()])
+hit_trainer = Trainer(
+    deterministic=True,
+    max_epochs=50,
+    log_every_n_steps=5,
+    logger=hit_logger,
+    callbacks=[ErrorTracker()],
+)
 hit_trainer.fit(hit_module, datamodule=hit_dm)
 ```
 At each step of SGD, the algorithm randomly selects 32 training observations for
@@ -470,7 +455,6 @@ data using the `test()` method of our trainer.
 
 ```python
 hit_trainer.test(hit_module, datamodule=hit_dm)
-
 ```
 
 The results of the fit have been logged into a CSV file. We can find the
@@ -490,27 +474,21 @@ Since we will produce similar plots in later examples, we write a
 simple generic function to produce this plot.
 
 ```python
-def summary_plot(results,
-                 ax,
-                 col="loss",
-                 valid_legend="Validation",
-                 training_legend="Training",
-                 ylabel="Loss",
-                 fontsize=20):
-    for (column,
-         color,
-         label) in zip([f"train_{col}_epoch",
-                        f"valid_{col}"],
-                       ["black",
-                        "red"],
-                       [training_legend,
-                        valid_legend]):
-        results.plot(x="epoch",
-                     y=column,
-                     label=label,
-                     marker="o",
-                     color=color,
-                     ax=ax)
+def summary_plot(
+    results,
+    ax,
+    col="loss",
+    valid_legend="Validation",
+    training_legend="Training",
+    ylabel="Loss",
+    fontsize=20,
+):
+    for column, color, label in zip(
+        [f"train_{col}_epoch", f"valid_{col}"],
+        ["black", "red"],
+        [training_legend, valid_legend],
+    ):
+        results.plot(x="epoch", y=column, label=label, marker="o", color=color, ax=ax)
     ax.set_xlabel("Epoch")
     ax.set_ylabel(ylabel)
     return ax
@@ -519,11 +497,13 @@ We now set up our axes, and use our function to produce the MAE plot.
 
 ```python
 fig, ax = subplots(1, 1, figsize=(6, 6))
-ax = summary_plot(hit_results,
-                  ax,
-                  col="mae",
-                  ylabel="MAE",
-                  valid_legend="Validation (=Test)")
+ax = summary_plot(
+    hit_results,
+    ax,
+    col="mae",
+    ylabel="MAE",
+    valid_legend="Validation (=Test)",
+)
 ax.set_ylim([0, 400])
 ax.set_xticks(np.linspace(0, 50, 11).astype(int));
 ```
@@ -553,16 +533,24 @@ will be killed.
  
 
 ```python
-del(Hitters,
-    hit_model, hit_dm,
+del (
+    Hitters,
+    hit_model,
+    hit_dm,
     hit_logger,
-    hit_test, hit_train,
-    X, Y,
-    X_test, X_train,
-    Y_test, Y_train,
-    X_test_t, Y_test_t,
-    hit_trainer, hit_module)
-
+    hit_test,
+    hit_train,
+    X,
+    Y,
+    X_test,
+    X_train,
+    Y_test,
+    Y_train,
+    X_test_t,
+    Y_test_t,
+    hit_trainer,
+    hit_module,
+)
 ```
 
 ## Multilayer Network on the MNIST Digit Data
@@ -573,14 +561,11 @@ the training and test data sets; the `MNIST()` function within
 data will be downloaded the first time this function is executed, and stored in the directory `data/MNIST`.
 
 ```python
-(mnist_train,
- mnist_test) = [MNIST(root="data",
-                      train=train,
-                      download=True,
-                      transform=ToTensor())
-                for train in [True, False]]
+(mnist_train, mnist_test) = (
+    MNIST(root="data", train=train, download=True, transform=ToTensor())
+    for train in [True, False]
+)
 mnist_train
-
 ```
 
 There are 60,000 images in the training data and 10,000 in the test
@@ -601,24 +586,24 @@ from the training and test datasets, setting aside 20%
 of the training images for validation.
 
 ```python
-mnist_dm = SimpleDataModule(mnist_train,
-                            mnist_test,
-                            validation=0.2,
-                            num_workers=max_num_workers,
-                            batch_size=256)
-
+mnist_dm = SimpleDataModule(
+    mnist_train,
+    mnist_test,
+    validation=0.2,
+    num_workers=max_num_workers,
+    batch_size=256,
+)
 ```
 
 Let’s take a look at the data that will get fed into our network. We loop through the first few
 chunks of the test dataset, breaking after 2 batches:
 
 ```python
-for idx, (X_ ,Y_) in enumerate(mnist_dm.train_dataloader()):
+for idx, (X_, Y_) in enumerate(mnist_dm.train_dataloader()):
     print("X: ", X_.shape)
     print("Y: ", Y_.shape)
     if idx >= 1:
         break
-
 ```
 
 We see that the $X$ for each batch consists of 256 images of size `1x28x28`.
@@ -633,17 +618,13 @@ class MNISTModel(nn.Module):
         super(MNISTModel, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(28*28, 256),
+            nn.Linear(28 * 28, 256),
             nn.ReLU(),
-            nn.Dropout(0.4))
-        self.layer2 = nn.Sequential(
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(0.3))
-        self._forward = nn.Sequential(
-            self.layer1,
-            self.layer2,
-            nn.Linear(128, 10))
+            nn.Dropout(0.4),
+        )
+        self.layer2 = nn.Sequential(nn.Linear(256, 128), nn.ReLU(), nn.Dropout(0.3))
+        self._forward = nn.Sequential(self.layer1, self.layer2, nn.Linear(128, 10))
+
     def forward(self, x):
         return self._forward(x)
 ```
@@ -657,7 +638,6 @@ the 128 dimensions are mapped down to 10, the number of classes in the
 
 ```python
 mnist_model = MNISTModel()
-
 ```
 
 We can check that the model produces output of expected size based
@@ -672,11 +652,11 @@ a tensor of correct shape. In this case, we pass through the final
 batched `X_` from above.
 
 ```python
-summary(mnist_model,
-        input_data=X_,
-        col_names=["input_size",
-                   "output_size",
-                   "num_params"])
+summary(
+    mnist_model,
+    input_data=X_,
+    col_names=["input_size", "output_size", "num_params"],
+)
 ```
 
 Having set up both  the model and the data module, fitting this model is
@@ -686,23 +666,21 @@ uses the  cross-entropy loss function instead of mean squared error. It must be 
 classes in the problem.
 
 ```python
-mnist_module = SimpleModule.classification(mnist_model,
-                                           num_classes=10)
+mnist_module = SimpleModule.classification(mnist_model, num_classes=10)
 mnist_logger = CSVLogger("logs", name="MNIST")
-
 ```
 
 Now we are ready to go. The final step is to supply training data, and fit the model. We disable the progress bar below to avoid lengthy output in the browser when running.
 
 ```python
-mnist_trainer = Trainer(deterministic=True,
-                        max_epochs=30,
-                        logger=mnist_logger,
-                        enable_progress_bar=False,
-                        callbacks=[ErrorTracker()])
-mnist_trainer.fit(mnist_module,
-                  datamodule=mnist_dm)
-
+mnist_trainer = Trainer(
+    deterministic=True,
+    max_epochs=30,
+    logger=mnist_logger,
+    enable_progress_bar=False,
+    callbacks=[ErrorTracker()],
+)
+mnist_trainer.fit(mnist_module, datamodule=mnist_dm)
 ```
 We have suppressed the output here, which is a progress report on the
 fitting of the model, grouped by epoch. This is very useful, since on
@@ -725,21 +703,16 @@ accuracy across epochs.
 ```python
 mnist_results = pd.read_csv(mnist_logger.experiment.metrics_file_path)
 fig, ax = subplots(1, 1, figsize=(6, 6))
-summary_plot(mnist_results,
-             ax,
-             col="accuracy",
-             ylabel="Accuracy")
+summary_plot(mnist_results, ax, col="accuracy", ylabel="Accuracy")
 ax.set_ylim([0.5, 1])
 ax.set_ylabel("Accuracy")
 ax.set_xticks(np.linspace(0, 30, 7).astype(int));
-
 ```
 Once again we evaluate the accuracy using the `test()` method of our trainer. This model achieves
 97% accuracy on the test data.
 
 ```python
-mnist_trainer.test(mnist_module,
-                   datamodule=mnist_dm)
+mnist_trainer.test(mnist_module, datamodule=mnist_dm)
 ```
 
 Table~\ref{Ch13:tab:mnist} also reports the error rates resulting from LDA (Chapter~\ref{Ch4:classification}) and multiclass logistic
@@ -753,29 +726,30 @@ We just have an input layer and an output layer, and omit the hidden layers!
 class MNIST_MLR(nn.Module):
     def __init__(self):
         super(MNIST_MLR, self).__init__()
-        self.linear = nn.Sequential(nn.Flatten(),
-                                    nn.Linear(784, 10))
+        self.linear = nn.Sequential(nn.Flatten(), nn.Linear(784, 10))
+
     def forward(self, x):
         return self.linear(x)
 
+
 mlr_model = MNIST_MLR()
-mlr_module = SimpleModule.classification(mlr_model,
-                                         num_classes=10)
+mlr_module = SimpleModule.classification(mlr_model, num_classes=10)
 mlr_logger = CSVLogger("logs", name="MNIST_MLR")
 ```
 
 ```python
-mlr_trainer = Trainer(deterministic=True,
-                      max_epochs=30,
-                      enable_progress_bar=False,
-                      callbacks=[ErrorTracker()])
+mlr_trainer = Trainer(
+    deterministic=True,
+    max_epochs=30,
+    enable_progress_bar=False,
+    callbacks=[ErrorTracker()],
+)
 mlr_trainer.fit(mlr_module, datamodule=mnist_dm)
 ```
 We fit the model just as before and compute the test results.
 
 ```python
-mlr_trainer.test(mlr_module,
-                 datamodule=mnist_dm)
+mlr_trainer.test(mlr_module, datamodule=mnist_dm)
 ```
 The accuracy is above 90% even for this pretty simple model.
 
@@ -783,7 +757,8 @@ As in the `Hitters` example, we delete some of
 the objects we created above.
 
 ```python
-del(mnist_test,
+del (
+    mnist_test,
     mnist_train,
     mnist_model,
     mnist_dm,
@@ -792,7 +767,8 @@ del(mnist_test,
     mnist_results,
     mlr_model,
     mlr_module,
-    mlr_trainer)
+    mlr_trainer,
+)
 ```
 
 ## Convolutional Neural Networks
@@ -800,23 +776,17 @@ In this section we fit a CNN to the `CIFAR100` data, which is available in the `
 package. It is arranged in a similar fashion as the `MNIST` data.
 
 ```python
-(cifar_train,
- cifar_test) = [CIFAR100(root="data",
-                         train=train,
-                         download=True)
-             for train in [True, False]]
+(cifar_train, cifar_test) = (
+    CIFAR100(root="data", train=train, download=True) for train in [True, False]
+)
 ```
 
 ```python
 transform = ToTensor()
-cifar_train_X = torch.stack([transform(x) for x in
-                            cifar_train.data])
-cifar_test_X = torch.stack([transform(x) for x in
-                            cifar_test.data])
-cifar_train = TensorDataset(cifar_train_X,
-                            torch.tensor(cifar_train.targets))
-cifar_test = TensorDataset(cifar_test_X,
-                            torch.tensor(cifar_test.targets))
+cifar_train_X = torch.stack([transform(x) for x in cifar_train.data])
+cifar_test_X = torch.stack([transform(x) for x in cifar_test.data])
+cifar_train = TensorDataset(cifar_train_X, torch.tensor(cifar_train.targets))
+cifar_test = TensorDataset(cifar_test_X, torch.tensor(cifar_test.targets))
 ```
 
 The `CIFAR100` dataset consists of 50,000 training images, each represented by a three-dimensional tensor:
@@ -827,22 +797,22 @@ digits, but keep the array structure. This is accomplished with the `ToTensor()`
 Creating the data module is similar to the `MNIST`  example.
 
 ```python
-cifar_dm = SimpleDataModule(cifar_train,
-                            cifar_test,
-                            validation=0.2,
-                            num_workers=max_num_workers,
-                            batch_size=128)
-
+cifar_dm = SimpleDataModule(
+    cifar_train,
+    cifar_test,
+    validation=0.2,
+    num_workers=max_num_workers,
+    batch_size=128,
+)
 ```
 We again look at the shape of typical batches in our data loaders.
 
 ```python
-for idx, (X_ ,Y_) in enumerate(cifar_dm.train_dataloader()):
+for idx, (X_, Y_) in enumerate(cifar_dm.train_dataloader()):
     print("X: ", X_.shape)
     print("Y: ", Y_.shape)
     if idx >= 1:
         break
-
 ```
 
 Before we start, we look at some of the training images; similar code produced
@@ -852,19 +822,18 @@ random images from the training data by indexing `cifar_train`. In order to disp
 we must reorder the dimensions by a call to `np.transpose()`.
 
 ```python
-fig, axes = subplots(5, 5, figsize=(10,10))
+fig, axes = subplots(5, 5, figsize=(10, 10))
 rng = np.random.default_rng(4)
-indices = rng.choice(np.arange(len(cifar_train)), 25,
-                     replace=False).reshape((5,5))
+indices = rng.choice(np.arange(len(cifar_train)), 25, replace=False).reshape((5, 5))
 for i in range(5):
     for j in range(5):
-        idx = indices[i,j]
-        axes[i,j].imshow(np.transpose(cifar_train[idx][0],
-                                      [1,2,0]),
-                                      interpolation=None)
-        axes[i,j].set_xticks([])
-        axes[i,j].set_yticks([])
-
+        idx = indices[i, j]
+        axes[i, j].imshow(
+            np.transpose(cifar_train[idx][0], [1, 2, 0]),
+            interpolation=None,
+        )
+        axes[i, j].set_xticks([])
+        axes[i, j].set_yticks([])
 ```
 Here the `imshow()` method recognizes from the shape of its argument that it is a 3-dimensional array, with the last dimension indexing the three RGB color channels.
 
@@ -878,22 +847,19 @@ of `nn.Module`. This user-defined  module can now be used in ways just like
 
 ```python
 class BuildingBlock(nn.Module):
-
-    def __init__(self,
-                 in_channels,
-                 out_channels):
-
+    def __init__(self, in_channels, out_channels):
         super(BuildingBlock, self).__init__()
-        self.conv = nn.Conv2d(in_channels=in_channels,
-                              out_channels=out_channels,
-                              kernel_size=(3,3),
-                              padding="same")
+        self.conv = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=(3, 3),
+            padding="same",
+        )
         self.activation = nn.ReLU()
-        self.pool = nn.MaxPool2d(kernel_size=(2,2))
+        self.pool = nn.MaxPool2d(kernel_size=(2, 2))
 
     def forward(self, x):
         return self.pool(self.activation(self.conv(x)))
-
 ```
 
 Notice that we used the `padding = "same"` argument to
@@ -912,36 +878,33 @@ modules. Ultimately, everything is fit by a generic trainer.
 
 ```python
 class CIFARModel(nn.Module):
-
     def __init__(self):
         super(CIFARModel, self).__init__()
-        sizes = [(3,32),
-                 (32,64),
-                 (64,128),
-                 (128,256)]
-        self.conv = nn.Sequential(*[BuildingBlock(in_, out_)
-                                    for in_, out_ in sizes])
+        sizes = [(3, 32), (32, 64), (64, 128), (128, 256)]
+        self.conv = nn.Sequential(*[BuildingBlock(in_, out_) for in_, out_ in sizes])
 
-        self.output = nn.Sequential(nn.Dropout(0.5),
-                                    nn.Linear(2*2*256, 512),
-                                    nn.ReLU(),
-                                    nn.Linear(512, 100))
+        self.output = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(2 * 2 * 256, 512),
+            nn.ReLU(),
+            nn.Linear(512, 100),
+        )
+
     def forward(self, x):
         val = self.conv(x)
         val = torch.flatten(val, start_dim=1)
         return self.output(val)
-
 ```
 
 We  build the model and look at the summary. (We had created examples of `X_` earlier.)
 
 ```python
 cifar_model = CIFARModel()
-summary(cifar_model,
-        input_data=X_,
-        col_names=["input_size",
-                   "output_size",
-                   "num_params"])
+summary(
+    cifar_model,
+    input_data=X_,
+    col_names=["input_size", "output_size", "num_params"],
+)
 ```
 
 The total number of trainable parameters is 964,516.
@@ -973,22 +936,23 @@ is encoded in the tensors themselves.
 
 ```python
 cifar_optimizer = RMSprop(cifar_model.parameters(), lr=0.001)
-cifar_module = SimpleModule.classification(cifar_model,
-                                    num_classes=100,
-                                    optimizer=cifar_optimizer)
+cifar_module = SimpleModule.classification(
+    cifar_model,
+    num_classes=100,
+    optimizer=cifar_optimizer,
+)
 cifar_logger = CSVLogger("logs", name="CIFAR100")
-
 ```
 
 ```python
-cifar_trainer = Trainer(deterministic=True,
-                        max_epochs=30,
-                        logger=cifar_logger,
-                        enable_progress_bar=False,
-                        callbacks=[ErrorTracker()])
-cifar_trainer.fit(cifar_module,
-                  datamodule=cifar_dm)
-
+cifar_trainer = Trainer(
+    deterministic=True,
+    max_epochs=30,
+    logger=cifar_logger,
+    enable_progress_bar=False,
+    callbacks=[ErrorTracker()],
+)
+cifar_trainer.fit(cifar_module, datamodule=cifar_dm)
 ```
 
 This model can take 10 minutes or more to run and achieves about 42% accuracy on the test
@@ -1004,10 +968,7 @@ across epochs.
 log_path = cifar_logger.experiment.metrics_file_path
 cifar_results = pd.read_csv(log_path)
 fig, ax = subplots(1, 1, figsize=(6, 6))
-summary_plot(cifar_results,
-             ax,
-             col="accuracy",
-             ylabel="Accuracy")
+summary_plot(cifar_results, ax, col="accuracy", ylabel="Accuracy")
 ax.set_xticks(np.linspace(0, 10, 6).astype(int))
 ax.set_ylabel("Accuracy")
 ax.set_ylim([0, 1]);
@@ -1015,9 +976,7 @@ ax.set_ylim([0, 1]);
 Finally, we evaluate our model on our test data.
 
 ```python
-cifar_trainer.test(cifar_module,
-                   datamodule=cifar_dm)
-
+cifar_trainer.test(cifar_module, datamodule=cifar_dm)
 ```
 
 ### Hardware Acceleration
@@ -1038,14 +997,14 @@ accomplished with a call to the `to()` method of the metrics.
 try:
     for name, metric in cifar_module.metrics.items():
         cifar_module.metrics[name] = metric.to("mps")
-    cifar_trainer_mps = Trainer(accelerator="mps",
-                                deterministic=True,
-                                enable_progress_bar=False,
-                                max_epochs=30)
-    cifar_trainer_mps.fit(cifar_module,
-                          datamodule=cifar_dm)
-    cifar_trainer_mps.test(cifar_module,
-                          datamodule=cifar_dm)
+    cifar_trainer_mps = Trainer(
+        accelerator="mps",
+        deterministic=True,
+        enable_progress_bar=False,
+        max_epochs=30,
+    )
+    cifar_trainer_mps.fit(cifar_module, datamodule=cifar_dm)
+    cifar_trainer_mps.test(cifar_module, datamodule=cifar_dm)
 except:
     pass
 ```
@@ -1069,13 +1028,11 @@ The conversion involves a resize, a crop and then a predefined standardization f
 We now read in the images and preprocess them.
 
 ```python
-resize = Resize((232,232), antialias=True)
+resize = Resize((232, 232), antialias=True)
 crop = CenterCrop(224)
-normalize = Normalize([0.485,0.456,0.406],
-                      [0.229,0.224,0.225])
+normalize = Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 imgfiles = sorted([f for f in glob("book_images/*")])
-imgs = torch.stack([torch.div(crop(resize(read_image(f))), 255)
-                    for f in imgfiles])
+imgs = torch.stack([torch.div(crop(resize(read_image(f))), 255) for f in imgfiles])
 imgs = normalize(imgs)
 imgs.size()
 ```
@@ -1084,12 +1041,11 @@ We now set up the trained network with the weights we read in code block~6. The 
 
 ```python
 resnet_model = resnet50(weights=ResNet50_Weights.DEFAULT)
-summary(resnet_model,
-        input_data=imgs,
-        col_names=["input_size",
-                   "output_size",
-                   "num_params"])
-
+summary(
+    resnet_model,
+    input_data=imgs,
+    col_names=["input_size", "output_size", "num_params"],
+)
 ```
 We set the mode to `eval()` to ensure that the model is ready to predict on new data.
 
@@ -1104,7 +1060,6 @@ We now feed our six images through the fitted network.
 
 ```python
 img_preds = resnet_model(imgs)
-
 ```
 
 Let’s look at the predicted probabilities for each of the top 3 choices. First we compute
@@ -1114,20 +1069,19 @@ it to our a more familiar `ndarray`.
 
 ```python
 img_probs = np.exp(np.asarray(img_preds.detach()))
-img_probs /= img_probs.sum(1)[:,None]
-
+img_probs /= img_probs.sum(1)[:, None]
 ```
 
 In order to see the class labels, we must download the index file associated with `imagenet`. {This is avalable from the book website and  [s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json](https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json).}
 
 ```python
 labs = json.load(open("imagenet_class_index.json"))
-class_labels = pd.DataFrame([(int(k), v[1]) for k, v in
-                           labs.items()],
-                           columns=["idx", "label"])
+class_labels = pd.DataFrame(
+    [(int(k), v[1]) for k, v in labs.items()],
+    columns=["idx", "label"],
+)
 class_labels = class_labels.set_index("idx")
 class_labels = class_labels.sort_index()
-
 ```
 
 We’ll now construct a data frame for each image file
@@ -1141,7 +1095,6 @@ for i, imgfile in enumerate(imgfiles):
     img_df = img_df.sort_values(by="prob", ascending=False)[:3]
     print(f"Image: {imgfile}")
     print(img_df.reset_index().drop(columns=["idx"]))
-
 ```
 
 We see that the model
@@ -1151,13 +1104,15 @@ other images.
 We end this section with our usual cleanup.
 
 ```python
-del(cifar_test,
+del (
+    cifar_test,
     cifar_train,
     cifar_dm,
     cifar_module,
     cifar_logger,
     cifar_optimizer,
-    cifar_trainer)
+    cifar_trainer,
+)
 ```
 
 ## IMDB Document Classification
@@ -1180,12 +1135,10 @@ version of the original sequence representation, limited to the last
 500 words of each review.
 
 ```python
-(imdb_seq_train,
- imdb_seq_test) = load_sequential(root="data/IMDB")
+(imdb_seq_train, imdb_seq_test) = load_sequential(root="data/IMDB")
 padded_sample = np.asarray(imdb_seq_train.tensors[0][0])
 sample_review = padded_sample[padded_sample > 0][:12]
 sample_review[:12]
-
 ```
 The datasets `imdb_seq_train` and `imdb_seq_test` are
 both instances of the class `TensorDataset`. The
@@ -1210,21 +1163,20 @@ are quite short, such a feature matrix has over 98% zeros. These data
 are accessed using `load_tensor()` from the `ISLP` library.
 
 ```python
-max_num_workers=10
-(imdb_train,
- imdb_test) = load_tensor(root="data/IMDB")
-imdb_dm = SimpleDataModule(imdb_train,
-                           imdb_test,
-                           validation=2000,
-                           num_workers=min(6, max_num_workers),
-                           batch_size=512)
-
+max_num_workers = 10
+(imdb_train, imdb_test) = load_tensor(root="data/IMDB")
+imdb_dm = SimpleDataModule(
+    imdb_train,
+    imdb_test,
+    validation=2000,
+    num_workers=min(6, max_num_workers),
+    batch_size=512,
+)
 ```
 We’ll use a two-layer model for our first model.
 
 ```python
 class IMDBModel(nn.Module):
-
     def __init__(self, input_size):
         super(IMDBModel, self).__init__()
         self.dense1 = nn.Linear(input_size, 16)
@@ -1234,25 +1186,25 @@ class IMDBModel(nn.Module):
 
     def forward(self, x):
         val = x
-        for _map in [self.dense1,
-                     self.activation,
-                     self.dense2,
-                     self.activation,
-                     self.output]:
+        for _map in [
+            self.dense1,
+            self.activation,
+            self.dense2,
+            self.activation,
+            self.output,
+        ]:
             val = _map(val)
         return torch.flatten(val)
-
 ```
 We now instantiate our model and look at a summary.
 
 ```python
 imdb_model = IMDBModel(imdb_test.tensors[0].size()[1])
-summary(imdb_model,
-        input_size=imdb_test.tensors[0].size(),
-        col_names=["input_size",
-                   "output_size",
-                   "num_params"])
-
+summary(
+    imdb_model,
+    input_size=imdb_test.tensors[0].size(),
+    col_names=["input_size", "output_size", "num_params"],
+)
 ```
 
 We’ll again use
@@ -1268,10 +1220,7 @@ as well as the data type of the targets.}
 
 ```python
 imdb_optimizer = RMSprop(imdb_model.parameters(), lr=0.001)
-imdb_module = SimpleModule.binary_classification(
-                         imdb_model,
-                         optimizer=imdb_optimizer)
-
+imdb_module = SimpleModule.binary_classification(imdb_model, optimizer=imdb_optimizer)
 ```
 
 Having loaded the datasets into a data module
@@ -1280,13 +1229,14 @@ are familiar.
 
 ```python
 imdb_logger = CSVLogger("logs", name="IMDB")
-imdb_trainer = Trainer(deterministic=True,
-                       max_epochs=30,
-                       logger=imdb_logger,
-                       enable_progress_bar=False,
-                       callbacks=[ErrorTracker()])
-imdb_trainer.fit(imdb_module,
-                 datamodule=imdb_dm)
+imdb_trainer = Trainer(
+    deterministic=True,
+    max_epochs=30,
+    logger=imdb_logger,
+    enable_progress_bar=False,
+    callbacks=[ErrorTracker()],
+)
+imdb_trainer.fit(imdb_module, datamodule=imdb_dm)
 ```
 
 Evaluating the test error yields roughly 86% accuracy.
@@ -1303,12 +1253,11 @@ the sparse tensors of `torch`, we use a sparse
 matrix that is recognized by `sklearn.`
 
 ```python
-((X_train, Y_train),
- (X_valid, Y_valid),
- (X_test, Y_test)) = load_sparse(validation=2000,
-                                 random_state=0,
-                                 root="data/IMDB")
-
+((X_train, Y_train), (X_valid, Y_valid), (X_test, Y_test)) = load_sparse(
+    validation=2000,
+    random_state=0,
+    root="data/IMDB",
+)
 ```
 
 Similar to what we did in
@@ -1317,9 +1266,7 @@ we construct a series of 50 values for the lasso reguralization parameter $\lamb
 
 ```python
 lam_max = np.abs(X_train.T * (Y_train - Y_train.mean())).max()
-lam_val = lam_max * np.exp(np.linspace(np.log(1),
-                                       np.log(1e-4), 50))
-
+lam_val = lam_max * np.exp(np.linspace(np.log(1), np.log(1e-4), 50))
 ```
 With `LogisticRegression()` the regularization parameter
 $C$ is specified as the inverse of $\lambda$. There are several
@@ -1327,12 +1274,13 @@ solvers for logistic regression; here we use `liblinear` which
 works well with the sparse input format. 
 
 ```python
-logit = LogisticRegression(penalty="l1",
-                           C=1/lam_max,
-                           solver="liblinear",
-                           warm_start=True,
-                           fit_intercept=True)
-
+logit = LogisticRegression(
+    penalty="l1",
+    C=1 / lam_max,
+    solver="liblinear",
+    warm_start=True,
+    fit_intercept=True,
+)
 ```
 The path of 50 values takes approximately 40 seconds to run.
 
@@ -1341,11 +1289,10 @@ coefs = []
 intercepts = []
 
 for l in lam_val:
-    logit.C = 1/l
+    logit.C = 1 / l
     logit.fit(X_train, Y_train)
     coefs.append(logit.coef_.copy())
     intercepts.append(logit.intercept_)
-
 ```
 
 The coefficient and intercepts have an extraneous dimension which can be removed
@@ -1354,7 +1301,6 @@ by the `np.squeeze()`  function.
 ```python
 coefs = np.squeeze(coefs)
 intercepts = np.squeeze(intercepts)
-
 ```
 We’ll now make a plot to compare our neural network results with the
 lasso.
@@ -1362,27 +1308,26 @@ lasso.
 ```python
 %%capture
 fig, axes = subplots(1, 2, figsize=(16, 8), sharey=True)
-for ((X_, Y_),
-     data_,
-     color) in zip([(X_train, Y_train),
-                    (X_valid, Y_valid),
-                    (X_test, Y_test)],
-                    ["Training", "Validation", "Test"],
-                    ["black", "red", "blue"]):
-    linpred_ = X_ * coefs.T + intercepts[None,:]
+for (X_, Y_), data_, color in zip(
+    [(X_train, Y_train), (X_valid, Y_valid), (X_test, Y_test)],
+    ["Training", "Validation", "Test"],
+    ["black", "red", "blue"],
+):
+    linpred_ = X_ * coefs.T + intercepts[None, :]
     label_ = np.array(linpred_ > 0)
     accuracy_ = np.array([np.mean(l == Y_) for l in label_.T])
-    axes[0].plot(-np.log(lam_val / X_train.shape[0]),
-                 accuracy_,
-                 ".--",
-                 color=color,
-                 markersize=13,
-                 linewidth=2,
-                 label=data_)
+    axes[0].plot(
+        -np.log(lam_val / X_train.shape[0]),
+        accuracy_,
+        ".--",
+        color=color,
+        markersize=13,
+        linewidth=2,
+        label=data_,
+    )
 axes[0].legend()
 axes[0].set_xlabel(r"$-\log(\lambda)$", fontsize=20)
 axes[0].set_ylabel("Accuracy", fontsize=20)
-
 ```
 Notice the use of `%%capture`, which suppresses the displaying of the partially completed figure. This is useful
 when making a complex figure, since the steps can be spread across two or more cells.
@@ -1390,18 +1335,17 @@ We now add a plot of the lasso accuracy, and display the composed figure by simp
 
 ```python
 imdb_results = pd.read_csv(imdb_logger.experiment.metrics_file_path)
-summary_plot(imdb_results,
-             axes[1],
-             col="accuracy",
-             ylabel="Accuracy")
+summary_plot(imdb_results, axes[1], col="accuracy", ylabel="Accuracy")
 axes[1].set_xticks(np.linspace(0, 30, 7).astype(int))
 axes[1].set_ylabel("Accuracy", fontsize=20)
 axes[1].set_xlabel("Epoch", fontsize=20)
 axes[1].set_ylim([0.5, 1])
-axes[1].axhline(test_results[0]["test_accuracy"],
-                color="blue",
-                linestyle="--",
-                linewidth=3)
+axes[1].axhline(
+    test_results[0]["test_accuracy"],
+    color="blue",
+    linestyle="--",
+    linewidth=3,
+)
 fig
 ```
 From the graphs we see that the accuracy of the lasso logistic regression peaks at about $0.88$,  as it does for  the neural network.
@@ -1409,12 +1353,7 @@ From the graphs we see that the accuracy of the lasso logistic regression peaks 
 Once again, we end with a cleanup.
 
 ```python
-del(imdb_model,
-    imdb_trainer,
-    imdb_logger,
-    imdb_dm,
-    imdb_train,
-    imdb_test)
+del (imdb_model, imdb_trainer, imdb_logger, imdb_dm, imdb_train, imdb_test)
 ```
 
 ## Recurrent Neural Networks
@@ -1435,13 +1374,13 @@ longer documents, we used the last 500 words, and for shorter
 documents, we padded the front with blanks.
 
 ```python
-imdb_seq_dm = SimpleDataModule(imdb_seq_train,
-                               imdb_seq_test,
-                               validation=2000,
-                               batch_size=300,
-                               num_workers=min(6, max_num_workers),
-                               )
-
+imdb_seq_dm = SimpleDataModule(
+    imdb_seq_train,
+    imdb_seq_test,
+    validation=2000,
+    batch_size=300,
+    num_workers=min(6, max_num_workers),
+)
 ```
 
 The first layer of the RNN is an embedding layer of size 32, which will be
@@ -1465,25 +1404,23 @@ class LSTMModel(nn.Module):
     def __init__(self, input_size):
         super(LSTMModel, self).__init__()
         self.embedding = nn.Embedding(input_size, 32)
-        self.lstm = nn.LSTM(input_size=32,
-                            hidden_size=32,
-                            batch_first=True)
+        self.lstm = nn.LSTM(input_size=32, hidden_size=32, batch_first=True)
         self.dense = nn.Linear(32, 1)
+
     def forward(self, x):
         val, (h_n, c_n) = self.lstm(self.embedding(x))
-        return torch.flatten(self.dense(val[:,-1]))
+        return torch.flatten(self.dense(val[:, -1]))
 ```
 We instantiate and take a look at the summary of the model, using the
 first 10 documents in the corpus.
 
 ```python
 lstm_model = LSTMModel(X_test.shape[-1])
-summary(lstm_model,
-        input_data=imdb_seq_train.tensors[0][:10],
-        col_names=["input_size",
-                   "output_size",
-                   "num_params"])
-
+summary(
+    lstm_model,
+    input_data=imdb_seq_train.tensors[0][:10],
+    col_names=["input_size", "output_size", "num_params"],
+)
 ```
 
 The 10,003 is suppressed in the summary, but we see it in the
@@ -1492,18 +1429,17 @@ parameter count, since $10,003\times 32=320,096$.
 ```python
 lstm_module = SimpleModule.binary_classification(lstm_model)
 lstm_logger = CSVLogger("logs", name="IMDB_LSTM")
-
 ```
 
 ```python
-lstm_trainer = Trainer(deterministic=True,
-                       max_epochs=20,
-                       logger=lstm_logger,
-                       enable_progress_bar=False,
-                       callbacks=[ErrorTracker()])
-lstm_trainer.fit(lstm_module,
-                 datamodule=imdb_seq_dm)
-
+lstm_trainer = Trainer(
+    deterministic=True,
+    max_epochs=20,
+    logger=lstm_logger,
+    enable_progress_bar=False,
+    callbacks=[ErrorTracker()],
+)
+lstm_trainer.fit(lstm_module, datamodule=imdb_seq_dm)
 ```
 The rest is now similar to other networks we have fit. We
 track the test performance as the network is fit, and see that it attains 85% accuracy.
@@ -1517,24 +1453,14 @@ We once again show the learning progress, followed by cleanup.
 ```python
 lstm_results = pd.read_csv(lstm_logger.experiment.metrics_file_path)
 fig, ax = subplots(1, 1, figsize=(6, 6))
-summary_plot(lstm_results,
-             ax,
-             col="accuracy",
-             ylabel="Accuracy")
+summary_plot(lstm_results, ax, col="accuracy", ylabel="Accuracy")
 ax.set_xticks(np.linspace(0, 20, 5).astype(int))
 ax.set_ylabel("Accuracy")
 ax.set_ylim([0.5, 1])
-
 ```
 
 ```python
-del(lstm_model,
-    lstm_trainer,
-    lstm_logger,
-    imdb_seq_dm,
-    imdb_seq_train,
-    imdb_seq_test)
-
+del (lstm_model, lstm_trainer, lstm_logger, imdb_seq_dm, imdb_seq_train, imdb_seq_test)
 ```
 
 ### Time Series Prediction
@@ -1545,12 +1471,11 @@ We first load and standardize the data.
 ```python
 NYSE = load_data("NYSE")
 cols = ["DJ_return", "log_volume", "log_volatility"]
-X = pd.DataFrame(StandardScaler(
-                     with_mean=True,
-                     with_std=True).fit_transform(NYSE[cols]),
-                 columns=NYSE[cols].columns,
-                 index=NYSE.index)
-
+X = pd.DataFrame(
+    StandardScaler(with_mean=True, with_std=True).fit_transform(NYSE[cols]),
+    columns=NYSE[cols].columns,
+    index=NYSE.index,
+)
 ```
 
 Next we set up the lagged versions of the data, dropping
@@ -1564,7 +1489,6 @@ for lag in range(1, 6):
         X.insert(len(X.columns), f"{col}_{lag}", newcol)
 X.insert(len(X.columns), "train", NYSE["train"])
 X = X.dropna()
-
 ```
 
 Finally, we extract the response, training indicator, and drop the current day’s `DJ_return` and
@@ -1574,7 +1498,6 @@ Finally, we extract the response, training indicator, and drop the current day�
 Y, train = X["log_volume"], X["train"]
 X = X.drop(columns=["train"] + cols)
 X.columns
-
 ```
 
 We first fit a simple linear model and compute the $R^2$ on the test data using
@@ -1591,9 +1514,7 @@ For a categorical series in `pandas`, we can form the indicators
 using the `get_dummies()`  method.
 
 ```python
-X_day = pd.concat([X,
-                  pd.get_dummies(NYSE["day_of_week"])],
-                  axis=1).dropna()
+X_day = pd.concat([X, pd.get_dummies(NYSE["day_of_week"])], axis=1).dropna()
 ```
  Note that we do not have
 to reinstantiate the linear regression model
@@ -1621,17 +1542,16 @@ iterable objects. The general notation is `start:end:step`.
 
 ```python
 ordered_cols = []
-for lag in range(5,0,-1):
+for lag in range(5, 0, -1):
     for col in cols:
         ordered_cols.append(f"{col}_{lag}")
 X = X.reindex(columns=ordered_cols)
 X.columns
-
 ```
 We now reshape the data.
 
 ```python
-X_rnn = X.to_numpy().reshape((-1,5,3))
+X_rnn = X.to_numpy().reshape((-1, 5, 3))
 X_rnn.shape
 ```
 By specifying the first size as -1, `numpy.reshape()` deduces its size based on the remaining arguments.
@@ -1646,15 +1566,16 @@ a linear layer.
 class NYSEModel(nn.Module):
     def __init__(self):
         super(NYSEModel, self).__init__()
-        self.rnn = nn.RNN(3,
-                          12,
-                          batch_first=True)
+        self.rnn = nn.RNN(3, 12, batch_first=True)
         self.dense = nn.Linear(12, 1)
         self.dropout = nn.Dropout(0.1)
+
     def forward(self, x):
         val, h_n = self.rnn(x)
-        val = self.dense(self.dropout(val[:,-1]))
+        val = self.dense(self.dropout(val[:, -1]))
         return torch.flatten(val)
+
+
 nyse_model = NYSEModel()
 ```
 
@@ -1674,28 +1595,28 @@ for mask in [train, ~train]:
     Y_t = torch.tensor(Y[mask].astype(np.float32))
     datasets.append(TensorDataset(X_rnn_t, Y_t))
 nyse_train, nyse_test = datasets
-
 ```
 
 Following our usual pattern, we inspect the summary.
 
 ```python
-summary(nyse_model,
-        input_data=X_rnn_t,
-        col_names=["input_size",
-                   "output_size",
-                   "num_params"])
-
+summary(
+    nyse_model,
+    input_data=X_rnn_t,
+    col_names=["input_size", "output_size", "num_params"],
+)
 ```
 We again put the two datasets into a data module, with a
 batch size of 64.
 
 ```python
-nyse_dm = SimpleDataModule(nyse_train,
-                           nyse_test,
-                           num_workers=min(4, max_num_workers),
-                           validation=nyse_test,
-                           batch_size=64)
+nyse_dm = SimpleDataModule(
+    nyse_train,
+    nyse_test,
+    num_workers=min(4, max_num_workers),
+    validation=nyse_test,
+    batch_size=64,
+)
 ```
 We run some data through our model to be sure the sizes match up correctly.
 
@@ -1705,7 +1626,6 @@ for idx, (x, y) in enumerate(nyse_dm.train_dataloader()):
     print(y.size(), out.size())
     if idx >= 2:
         break
-
 ```
 
 We follow our previous example for setting up a trainer for a
@@ -1713,26 +1633,26 @@ regression problem, requesting the $R^2$ metric
 to be be computed at each epoch.
 
 ```python
-nyse_optimizer = RMSprop(nyse_model.parameters(),
-                         lr=0.001)
-nyse_module = SimpleModule.regression(nyse_model,
-                                      optimizer=nyse_optimizer,
-                                      metrics={"r2":R2Score()})
-
+nyse_optimizer = RMSprop(nyse_model.parameters(), lr=0.001)
+nyse_module = SimpleModule.regression(
+    nyse_model,
+    optimizer=nyse_optimizer,
+    metrics={"r2": R2Score()},
+)
 ```
 
 Fitting the model should by now be familiar.
 The results on the test data are very similar to the linear AR model. 
 
 ```python
-nyse_trainer = Trainer(deterministic=True,
-                       max_epochs=200,
-                       enable_progress_bar=False,
-                       callbacks=[ErrorTracker()])
-nyse_trainer.fit(nyse_module,
-                 datamodule=nyse_dm)
-nyse_trainer.test(nyse_module,
-                  datamodule=nyse_dm)
+nyse_trainer = Trainer(
+    deterministic=True,
+    max_epochs=200,
+    enable_progress_bar=False,
+    callbacks=[ErrorTracker()],
+)
+nyse_trainer.fit(nyse_module, datamodule=nyse_dm)
+nyse_trainer.test(nyse_module, datamodule=nyse_dm)
 ```
 
 We could also fit a model without the `nn.RNN()` layer by just
@@ -1748,8 +1668,7 @@ general pipeline for `torch`.
 ```python
 datasets = []
 for mask in [train, ~train]:
-    X_day_t = torch.tensor(
-                   np.asarray(X_day[mask]).astype(np.float32))
+    X_day_t = torch.tensor(np.asarray(X_day[mask]).astype(np.float32))
     Y_t = torch.tensor(np.asarray(Y[mask]).astype(np.float32))
     datasets.append(TensorDataset(X_day_t, Y_t))
 day_train, day_test = datasets
@@ -1758,12 +1677,13 @@ day_train, day_test = datasets
 Creating a data module follows a familiar pattern.
 
 ```python
-day_dm = SimpleDataModule(day_train,
-                          day_test,
-                          num_workers=min(4, max_num_workers),
-                          validation=day_test,
-                          batch_size=64)
-
+day_dm = SimpleDataModule(
+    day_train,
+    day_test,
+    num_workers=min(4, max_num_workers),
+    validation=day_test,
+    batch_size=64,
+)
 ```
 
 We build a `NonLinearARModel()` that takes as input the 20 features and a hidden layer  with 32 units. The remaining steps are familiar.
@@ -1772,34 +1692,38 @@ We build a `NonLinearARModel()` that takes as input the 20 features and a hidden
 class NonLinearARModel(nn.Module):
     def __init__(self):
         super(NonLinearARModel, self).__init__()
-        self._forward = nn.Sequential(nn.Flatten(),
-                                      nn.Linear(20, 32),
-                                      nn.ReLU(),
-                                      nn.Dropout(0.5),
-                                      nn.Linear(32, 1))
+        self._forward = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(20, 32),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(32, 1),
+        )
+
     def forward(self, x):
         return torch.flatten(self._forward(x))
-
 ```
 
 ```python
 nl_model = NonLinearARModel()
-nl_optimizer = RMSprop(nl_model.parameters(),
-                           lr=0.001)
-nl_module = SimpleModule.regression(nl_model,
-                                        optimizer=nl_optimizer,
-                                        metrics={"r2":R2Score()})
-
+nl_optimizer = RMSprop(nl_model.parameters(), lr=0.001)
+nl_module = SimpleModule.regression(
+    nl_model,
+    optimizer=nl_optimizer,
+    metrics={"r2": R2Score()},
+)
 ```
 
 We continue with the usual training steps, fit the model,
 and evaluate the test error. We see the test $R^2$ is a slight improvement over the linear AR model that also includes `day_of_week`.
 
 ```python
-nl_trainer = Trainer(deterministic=True,
-                     max_epochs=20,
-                     enable_progress_bar=False,
-                     callbacks=[ErrorTracker()])
+nl_trainer = Trainer(
+    deterministic=True,
+    max_epochs=20,
+    enable_progress_bar=False,
+    callbacks=[ErrorTracker()],
+)
 nl_trainer.fit(nl_module, datamodule=day_dm)
 nl_trainer.test(nl_module, datamodule=day_dm)
 ```

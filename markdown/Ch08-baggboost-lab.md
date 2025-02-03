@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -26,7 +26,6 @@ import sklearn.model_selection as skm
 from ISLP import confusion_table, load_data
 from ISLP.models import ModelSpec as MS
 from matplotlib.pyplot import subplots
-
 ```
 We also  collect the new imports
 needed for this lab.
@@ -39,7 +38,6 @@ from sklearn.metrics import accuracy_score, log_loss
 from sklearn.tree import DecisionTreeClassifier as DTC
 from sklearn.tree import DecisionTreeRegressor as DTR
 from sklearn.tree import export_text, plot_tree
-
 ```
 
 ## Fitting Classification Trees
@@ -53,10 +51,7 @@ on a value of `No` otherwise.
 
 ```python
 Carseats = load_data("Carseats")
-High = np.where(Carseats.Sales > 8,
-                "Yes",
-                "No")
-
+High = np.where(Carseats.Sales > 8, "Yes", "No")
 ```
 
 We now use `DecisionTreeClassifier()`  to fit a classification tree in
@@ -69,7 +64,6 @@ model = MS(Carseats.columns.drop("Sales"), intercept=False)
 D = model.fit_transform(Carseats)
 feature_names = list(D.columns)
 X = np.asarray(D)
-
 ```
 We have converted `D` from a data frame to an array `X`, which is needed in some of the analysis below. We also need the `feature_names` for annotating our plots later.
 
@@ -80,11 +74,8 @@ and `criterion` (whether to use Gini or cross-entropy as the split criterion).
 We also set `random_state` for reproducibility; ties in the split criterion are broken at random.
 
 ```python
-clf = DTC(criterion="entropy",
-          max_depth=3,
-          random_state=0)
+clf = DTC(criterion="entropy", max_depth=3, random_state=0)
 clf.fit(X, High)
-
 ```
 
 In our discussion of qualitative features in Section~\ref{ch3:sec3},
@@ -100,7 +91,6 @@ advantage of this approach; instead it simply treats the one-hot-encoded levels 
 
 ```python
 accuracy_score(High, clf.predict(X))
-
 ```
 
 With only the default arguments, the training error rate is
@@ -118,7 +108,6 @@ node that belong to the $k$th class.
 ```python
 resid_dev = np.sum(log_loss(High, clf.predict_proba(X)))
 resid_dev
-
 ```
 
 This is closely related to the *entropy*, defined in (\ref{Ch8:eq:cross-entropy}).
@@ -130,11 +119,8 @@ be graphically displayed. Here we use the `plot()`  function
 to display the tree structure.
 
 ```python
-ax = subplots(figsize=(12,12))[1]
-plot_tree(clf,
-          feature_names=feature_names,
-          ax=ax);
-
+ax = subplots(figsize=(12, 12))[1]
+plot_tree(clf, feature_names=feature_names, ax=ax);
 ```
 The most important indicator of `Sales` appears to be `ShelveLoc`.
 
@@ -147,10 +133,7 @@ For leaf nodes it shows the overall prediction
 leaf that take on values of `Yes` and `No` by specifying  `show_weights=True`.
 
 ```python
-print(export_text(clf,
-                  feature_names=feature_names,
-                  show_weights=True))
-
+print(export_text(clf, feature_names=feature_names, show_weights=True))
 ```
 
 In order to properly evaluate the performance of a classification tree
@@ -164,15 +147,9 @@ is almost identical. This approach leads to correct predictions
 for 68.5% of the locations in the test data set.
 
 ```python
-validation = skm.ShuffleSplit(n_splits=1,
-                              test_size=200,
-                              random_state=0)
-results = skm.cross_validate(clf,
-                             D,
-                             High,
-                             cv=validation)
+validation = skm.ShuffleSplit(n_splits=1, test_size=200, random_state=0)
+results = skm.cross_validate(clf, D, High, cv=validation)
 results["test_score"]
-
 ```
 
 Next, we consider whether pruning the tree might lead to improved
@@ -182,14 +159,12 @@ set, and then evaluate the performance of the pruned tree on the test
 set.
 
 ```python
-(X_train,
- X_test,
- High_train,
- High_test) = skm.train_test_split(X,
-                                   High,
-                                   test_size=0.5,
-                                   random_state=0)
-
+(X_train, X_test, High_train, High_test) = skm.train_test_split(
+    X,
+    High,
+    test_size=0.5,
+    random_state=0,
+)
 ```
 We first refit the full tree on the training set; here we do not set a `max_depth` parameter, since we will learn that through cross-validation.
 
@@ -197,47 +172,40 @@ We first refit the full tree on the training set; here we do not set a `max_dept
 clf = DTC(criterion="entropy", random_state=0)
 clf.fit(X_train, High_train)
 accuracy_score(High_test, clf.predict(X_test))
-
 ```
 Next we use the `cost_complexity_pruning_path()` method of
 `clf` to extract cost-complexity values. 
 
 ```python
 ccp_path = clf.cost_complexity_pruning_path(X_train, High_train)
-kfold = skm.KFold(10,
-                  random_state=1,
-                  shuffle=True)
-
+kfold = skm.KFold(10, random_state=1, shuffle=True)
 ```
 This yields a set of impurities and $\alpha$ values
 from which we can extract an optimal one by cross-validation.
 
 ```python
-grid = skm.GridSearchCV(clf,
-                        {"ccp_alpha": ccp_path.ccp_alphas},
-                        refit=True,
-                        cv=kfold,
-                        scoring="accuracy")
+grid = skm.GridSearchCV(
+    clf,
+    {"ccp_alpha": ccp_path.ccp_alphas},
+    refit=True,
+    cv=kfold,
+    scoring="accuracy",
+)
 grid.fit(X_train, High_train)
 grid.best_score_
-
 ```
 Let’s take a look at the pruned true.
 
 ```python
 ax = subplots(figsize=(12, 12))[1]
 best_ = grid.best_estimator_
-plot_tree(best_,
-          feature_names=feature_names,
-          ax=ax);
-
+plot_tree(best_, feature_names=feature_names, ax=ax);
 ```
 This is quite a bushy tree. We could count the leaves, or query
 `best_` instead.
 
 ```python
 best_.tree_.n_leaves
-
 ```
 The tree with 30 terminal
 nodes results in the lowest cross-validation error rate, with an accuracy of
@@ -245,12 +213,9 @@ nodes results in the lowest cross-validation error rate, with an accuracy of
 again, we apply the `predict()`  function.
 
 ```python
-print(accuracy_score(High_test,
-                     best_.predict(X_test)))
-confusion = confusion_table(best_.predict(X_test),
-                            High_test)
+print(accuracy_score(High_test, best_.predict(X_test)))
+confusion = confusion_table(best_.predict(X_test), High_test)
 confusion
-
 ```
 
 Now 72.0% of the test observations are correctly classified, which is slightly worse than the error for the full tree (with 35 leaves). So cross-validation has not helped us much here; it only pruned off 5 leaves, at a cost of a slightly worse error. These results would change if we were to change the random number seeds above; even though cross-validation gives an unbiased approach to model selection, it does have variance.
@@ -265,21 +230,18 @@ model = MS(Boston.columns.drop("medv"), intercept=False)
 D = model.fit_transform(Boston)
 feature_names = list(D.columns)
 X = np.asarray(D)
-
 ```
 
 First, we split the data into training and test sets, and fit the tree
 to the training data. Here we use 30% of the data for the test set.
 
 ```python
-(X_train,
- X_test,
- y_train,
- y_test) = skm.train_test_split(X,
-                                Boston["medv"],
-                                test_size=0.3,
-                                random_state=0)
-
+(X_train, X_test, y_train, y_test) = skm.train_test_split(
+    X,
+    Boston["medv"],
+    test_size=0.3,
+    random_state=0,
+)
 ```
 
 Having formed  our training  and test data sets, we fit the regression tree.
@@ -287,11 +249,8 @@ Having formed  our training  and test data sets, we fit the regression tree.
 ```python
 reg = DTR(max_depth=3)
 reg.fit(X_train, y_train)
-ax = subplots(figsize=(12,12))[1]
-plot_tree(reg,
-          feature_names=feature_names,
-          ax=ax);
-
+ax = subplots(figsize=(12, 12))[1]
+plot_tree(reg, feature_names=feature_names, ax=ax);
 ```
 
 The variable `lstat` measures the percentage of individuals with
@@ -305,16 +264,15 @@ the tree will improve performance.
 
 ```python
 ccp_path = reg.cost_complexity_pruning_path(X_train, y_train)
-kfold = skm.KFold(5,
-                  shuffle=True,
-                  random_state=10)
-grid = skm.GridSearchCV(reg,
-                        {"ccp_alpha": ccp_path.ccp_alphas},
-                        refit=True,
-                        cv=kfold,
-                        scoring="neg_mean_squared_error")
+kfold = skm.KFold(5, shuffle=True, random_state=10)
+grid = skm.GridSearchCV(
+    reg,
+    {"ccp_alpha": ccp_path.ccp_alphas},
+    refit=True,
+    cv=kfold,
+    scoring="neg_mean_squared_error",
+)
 G = grid.fit(X_train, y_train)
-
 ```
 
 In keeping with the cross-validation results, we use the pruned tree
@@ -322,8 +280,7 @@ to make predictions on the test set.
 
 ```python
 best_ = grid.best_estimator_
-np.mean((y_test - best_.predict(X_test))**2)
-
+np.mean((y_test - best_.predict(X_test)) ** 2)
 ```
 
 In other words, the test set MSE associated with the regression tree
@@ -337,11 +294,8 @@ of the true median home value for the suburb.
 Let’s plot the best tree to see how interpretable it is.
 
 ```python
-ax = subplots(figsize=(12,12))[1]
-plot_tree(G.best_estimator_,
-          feature_names=feature_names,
-          ax=ax);
-
+ax = subplots(figsize=(12, 12))[1]
+plot_tree(G.best_estimator_, feature_names=feature_names, ax=ax);
 ```
 
 ## Bagging and Random Forests
@@ -355,7 +309,6 @@ perform both bagging and random forests. We start with bagging.
 ```python
 bag_boston = RF(max_features=X_train.shape[1], random_state=0)
 bag_boston.fit(X_train, y_train)
-
 ```
 
 The argument `max_features` indicates that all 12 predictors should
@@ -364,11 +317,10 @@ bagging should be done.  How well does this bagged model perform on
 the test set?
 
 ```python
-ax = subplots(figsize=(8,8))[1]
+ax = subplots(figsize=(8, 8))[1]
 y_hat_bag = bag_boston.predict(X_test)
 ax.scatter(y_hat_bag, y_test)
-np.mean((y_test - y_hat_bag)**2)
-
+np.mean((y_test - y_hat_bag) ** 2)
 ```
 
 The test set MSE associated with the bagged regression tree is
@@ -378,11 +330,12 @@ tree.  We could change the number of trees grown from the default of
 using the `n_estimators` argument:
 
 ```python
-bag_boston = RF(max_features=X_train.shape[1],
-                n_estimators=500,
-                random_state=0).fit(X_train, y_train)
+bag_boston = RF(max_features=X_train.shape[1], n_estimators=500, random_state=0).fit(
+    X_train,
+    y_train,
+)
 y_hat_bag = bag_boston.predict(X_test)
-np.mean((y_test - y_hat_bag)**2)
+np.mean((y_test - y_hat_bag) ** 2)
 ```
 There is not much change. Bagging and random forests cannot overfit by
 increasing the number of trees, but can underfit if the number is too small.
@@ -395,11 +348,9 @@ $\sqrt{p}$ variables when building a
 random forest of classification trees. Here we use `max_features=6`.
 
 ```python
-RF_boston = RF(max_features=6,
-               random_state=0).fit(X_train, y_train)
+RF_boston = RF(max_features=6, random_state=0).fit(X_train, y_train)
 y_hat_RF = RF_boston.predict(X_test)
-np.mean((y_test - y_hat_RF)**2)
-
+np.mean((y_test - y_hat_RF) ** 2)
 ```
 
 The test set MSE is 20.04;
@@ -409,8 +360,9 @@ importance of each variable.
 
 ```python
 feature_imp = pd.DataFrame(
-    {"importance":RF_boston.feature_importances_},
-    index=feature_names)
+    {"importance": RF_boston.feature_importances_},
+    index=feature_names,
+)
 feature_imp.sort_values(by="importance", ascending=False)
 ```
  This
@@ -433,12 +385,8 @@ argument `learning_rate` is the $\lambda$
 mentioned earlier in the description of boosting.
 
 ```python
-boost_boston = GBR(n_estimators=5000,
-                   learning_rate=0.001,
-                   max_depth=3,
-                   random_state=0)
+boost_boston = GBR(n_estimators=5000, learning_rate=0.001, max_depth=3, random_state=0)
 boost_boston.fit(X_train, y_train)
-
 ```
 
 We can see how the training error decreases with the `train_score_` attribute.
@@ -448,28 +396,20 @@ To get an idea of how the test error decreases we can use the
 ```python
 test_error = np.zeros_like(boost_boston.train_score_)
 for idx, y_ in enumerate(boost_boston.staged_predict(X_test)):
-   test_error[idx] = np.mean((y_test - y_)**2)
+    test_error[idx] = np.mean((y_test - y_) ** 2)
 
 plot_idx = np.arange(boost_boston.train_score_.shape[0])
-ax = subplots(figsize=(8,8))[1]
-ax.plot(plot_idx,
-        boost_boston.train_score_,
-        "b",
-        label="Training")
-ax.plot(plot_idx,
-        test_error,
-        "r",
-        label="Test")
+ax = subplots(figsize=(8, 8))[1]
+ax.plot(plot_idx, boost_boston.train_score_, "b", label="Training")
+ax.plot(plot_idx, test_error, "r", label="Test")
 ax.legend();
-
 ```
 
 We now use the boosted model to predict `medv` on the test set:
 
 ```python
 y_hat_boost = boost_boston.predict(X_test)
-np.mean((y_test - y_hat_boost)**2)
-
+np.mean((y_test - y_hat_boost) ** 2)
 ```
 
  The test MSE obtained is 14.48,
@@ -479,15 +419,10 @@ $\lambda$ in  (\ref{Ch8:alphaboost}). The default value is 0.001, but
 this is easily modified.  Here we take $\lambda=0.2$.
 
 ```python
-boost_boston = GBR(n_estimators=5000,
-                   learning_rate=0.2,
-                   max_depth=3,
-                   random_state=0)
-boost_boston.fit(X_train,
-                 y_train)
+boost_boston = GBR(n_estimators=5000, learning_rate=0.2, max_depth=3, random_state=0)
+boost_boston.fit(X_train, y_train)
 y_hat_boost = boost_boston.predict(X_test)
-np.mean((y_test - y_hat_boost)**2)
-
+np.mean((y_test - y_hat_boost) ** 2)
 ```
 
 In this case, using $\lambda=0.2$ leads to a almost the same test MSE
@@ -504,25 +439,21 @@ fitting logistic and probit models to categorical outcomes.
 ```python
 bart_boston = BART(random_state=0, burnin=5, ndraw=15)
 bart_boston.fit(X_train, y_train)
-
 ```
 
 On this data set, with this split into test and training, we see that the test error of BART is similar to that of  random forest.
 
 ```python
 yhat_test = bart_boston.predict(X_test.astype(np.float32))
-np.mean((y_test - yhat_test)**2)
-
+np.mean((y_test - yhat_test) ** 2)
 ```
 
 We can check how many times each variable appeared in the collection of trees.
 This gives a summary similar to the variable importance plot for boosting and random forests.
 
 ```python
-var_inclusion = pd.Series(bart_boston.variable_inclusion_.mean(0),
-                               index=D.columns)
+var_inclusion = pd.Series(bart_boston.variable_inclusion_.mean(0), index=D.columns)
 var_inclusion
-
 ```
     
   

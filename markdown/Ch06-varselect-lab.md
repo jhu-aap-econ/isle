@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -32,7 +32,6 @@ from ISLP.models import ModelSpec as MS
 from matplotlib.pyplot import subplots
 from sklearn.preprocessing import StandardScaler
 from statsmodels.api import OLS
-
 ```
 
 We again collect the new imports
@@ -44,7 +43,6 @@ from l0bnb import fit_path
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
-
 ```
 
 ## Subset Selection Methods
@@ -69,7 +67,6 @@ missing elements.
 ```python
 Hitters = load_data("Hitters")
 np.isnan(Hitters["Salary"]).sum()
-
 ```
 
  We see that `Salary` is missing for 59 players. The
@@ -79,7 +76,6 @@ values in any variable (by default --- see  `Hitters.dropna?`).
 ```python
 Hitters = Hitters.dropna()
 Hitters.shape
-
 ```
 
 We first choose the best model using forward selection based on $C_p$ (\ref{Ch6:eq:cp}). This score
@@ -92,9 +88,8 @@ def nCp(sigma2, estimator, X, Y):
     """Negative Cp statistic"""
     n, p = X.shape
     Yhat = estimator.predict(X)
-    RSS = np.sum((Y - Yhat)**2)
+    RSS = np.sum((Y - Yhat) ** 2)
     return -(RSS + 2 * p * sigma2) / n
-
 ```
 We need to estimate the residual variance $\sigma^2$, which is the first argument in our scoring function above.
 We will fit the biggest model, using all the variables, and estimate $\sigma^2$ based on its MSE.
@@ -103,15 +98,13 @@ We will fit the biggest model, using all the variables, and estimate $\sigma^2$ 
 design = MS(Hitters.columns.drop("Salary")).fit(Hitters)
 Y = np.array(Hitters["Salary"])
 X = design.transform(Hitters)
-sigma2 = OLS(Y,X).fit().scale
-
+sigma2 = OLS(Y, X).fit().scale
 ```
 
 The function `sklearn_selected()` expects a scorer with just three arguments --- the last three in the definition of `nCp()` above. We use the function `partial()` first seen in Section~\ref{Ch5-resample-lab:the-bootstrap} to freeze the first argument with our estimate of $\sigma^2$.
 
 ```python
 neg_Cp = partial(nCp, sigma2)
-
 ```
 We can now use `neg_Cp()` as a scorer for model selection.
 
@@ -122,10 +115,7 @@ in an improvement in the evaluation score. Similarly, the method `Stepwise.fixed
 runs a fixed number of steps of stepwise search.
 
 ```python
-strategy = Stepwise.first_peak(design,
-                               direction="forward",
-                               max_terms=len(design.terms))
-
+strategy = Stepwise.first_peak(design, direction="forward", max_terms=len(design.terms))
 ```
 
 We now fit a linear regression model with `Salary` as outcome using forward
@@ -135,22 +125,17 @@ a model from `statsmodels` along with a search strategy and selects a model with
 selected.
 
 ```python
-hitters_MSE = sklearn_selected(OLS,
-                               strategy)
+hitters_MSE = sklearn_selected(OLS, strategy)
 hitters_MSE.fit(Hitters, Y)
 hitters_MSE.selected_state_
-
 ```
 
 Using `neg_Cp` results in a smaller model, as expected, with just 10 variables selected.
 
 ```python
-hitters_Cp = sklearn_selected(OLS,
-                               strategy,
-                               scoring=neg_Cp)
+hitters_Cp = sklearn_selected(OLS, strategy, scoring=neg_Cp)
 hitters_Cp.fit(Hitters, Y)
 hitters_Cp.selected_state_
-
 ```
 
 ### Choosing Among Models Using the Validation Set Approach and Cross-Validation
@@ -167,11 +152,8 @@ While there are various parameter choices for `sklearn_selection_path()`,
 we use the defaults here, which selects the model at each step based on the biggest reduction  in RSS.
 
 ```python
-strategy = Stepwise.fixed_steps(design,
-                                len(design.terms),
-                                direction="forward")
+strategy = Stepwise.fixed_steps(design, len(design.terms), direction="forward")
 full_path = sklearn_selection_path(OLS, strategy)
-
 ```
 
 We now fit the full forward-selection path on the `Hitters` data and compute the fitted values.
@@ -180,7 +162,6 @@ We now fit the full forward-selection path on the `Hitters` data and compute the
 full_path.fit(Hitters, Y)
 Yhat_in = full_path.predict(Hitters)
 Yhat_in.shape
-
 ```
 
 This gives us an array of fitted values --- 20 steps in all, including the fitted mean for the null model --- which we can use to evaluate
@@ -192,21 +173,20 @@ set MSE below, as well as other methods such as ridge regression, lasso and
 principal components regression.
 
 ```python
-mse_fig, ax = subplots(figsize=(8,8))
-insample_mse = ((Yhat_in - Y[:,None])**2).mean(0)
+mse_fig, ax = subplots(figsize=(8, 8))
+insample_mse = ((Yhat_in - Y[:, None]) ** 2).mean(0)
 n_steps = insample_mse.shape[0]
-ax.plot(np.arange(n_steps),
-        insample_mse,
-        "k", # color black
-        label="In-sample")
-ax.set_ylabel("MSE",
-              fontsize=20)
-ax.set_xlabel("# steps of forward stepwise",
-              fontsize=20)
+ax.plot(
+    np.arange(n_steps),
+    insample_mse,
+    "k",  # color black
+    label="In-sample",
+)
+ax.set_ylabel("MSE", fontsize=20)
+ax.set_xlabel("# steps of forward stepwise", fontsize=20)
 ax.set_xticks(np.arange(n_steps)[::2])
 ax.legend()
-ax.set_ylim([50000,250000]);
-
+ax.set_ylim([50000, 250000]);
 ```
 Notice the expression `None` in `Y[:,None]` above.
 This adds an axis (dimension) to the one-dimensional array `Y`,
@@ -225,15 +205,9 @@ We now compute the cross-validated predicted values using 5-fold cross-validatio
 
 ```python
 K = 5
-kfold = skm.KFold(K,
-                  random_state=0,
-                  shuffle=True)
-Yhat_cv = skm.cross_val_predict(full_path,
-                                Hitters,
-                                Y,
-                                cv=kfold)
+kfold = skm.KFold(K, random_state=0, shuffle=True)
+Yhat_cv = skm.cross_val_predict(full_path, Hitters, Y, cv=kfold)
 Yhat_cv.shape
-
 ```
 `skm.cross_val_predict()`
 The prediction matrix `Yhat_cv` is the same shape as `Yhat_in`; the difference is that the predictions in each row, corresponding to a particular sample index, were made from models fit on a training fold that did not include that row.
@@ -249,26 +223,26 @@ ignore the training indices below.
 ```python
 cv_mse = []
 for train_idx, test_idx in kfold.split(Y):
-    errors = (Yhat_cv[test_idx] - Y[test_idx,None])**2
-    cv_mse.append(errors.mean(0)) # column means
+    errors = (Yhat_cv[test_idx] - Y[test_idx, None]) ** 2
+    cv_mse.append(errors.mean(0))  # column means
 cv_mse = np.array(cv_mse).T
 cv_mse.shape
-
 ```
 
 We now add the cross-validation error estimates to our MSE plot.
 We include the mean error across the five folds, and the estimate of the standard error of the mean. 
 
 ```python
-ax.errorbar(np.arange(n_steps),
-            cv_mse.mean(1),
-            cv_mse.std(1) / np.sqrt(K),
-            label="Cross-validated",
-            c="r") # color red
-ax.set_ylim([50000,250000])
+ax.errorbar(
+    np.arange(n_steps),
+    cv_mse.mean(1),
+    cv_mse.std(1) / np.sqrt(K),
+    label="Cross-validated",
+    c="r",
+)  # color red
+ax.set_ylim([50000, 250000])
 ax.legend()
 mse_fig
-
 ```
 
 To repeat the above using the validation set approach, we simply change our
@@ -276,29 +250,26 @@ To repeat the above using the validation set approach, we simply change our
 of 20%, similar to the size of each test set in 5-fold cross-validation.`skm.ShuffleSplit()`
 
 ```python
-validation = skm.ShuffleSplit(n_splits=1,
-                              test_size=0.2,
-                              random_state=0)
+validation = skm.ShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
 for train_idx, test_idx in validation.split(Y):
-    full_path.fit(Hitters.iloc[train_idx],
-                  Y[train_idx])
+    full_path.fit(Hitters.iloc[train_idx], Y[train_idx])
     Yhat_val = full_path.predict(Hitters.iloc[test_idx])
-    errors = (Yhat_val - Y[test_idx,None])**2
+    errors = (Yhat_val - Y[test_idx, None]) ** 2
     validation_mse = errors.mean(0)
-
 ```
  As for the in-sample MSE case, the validation set approach does not provide standard errors.
 
 ```python
-ax.plot(np.arange(n_steps),
-        validation_mse,
-        "b--", # color blue, broken line
-        label="Validation")
+ax.plot(
+    np.arange(n_steps),
+    validation_mse,
+    "b--",  # color blue, broken line
+    label="Validation",
+)
 ax.set_xticks(np.arange(n_steps)[::2])
-ax.set_ylim([50000,250000])
+ax.set_ylim([50000, 250000])
 ax.legend()
 mse_fig
-
 ```
 
 ### Best Subset Selection
@@ -315,23 +286,18 @@ penalty rather than a constraint. Although the distinction is subtle, the differ
 D = design.fit_transform(Hitters)
 D = D.drop("intercept", axis=1)
 X = np.asarray(D)
-
 ```
 Here we excluded the first column corresponding to the intercept, as
 `l0bnb` will fit the intercept separately. We can find a path using the `fit_path()` function.
 
 ```python
-path = fit_path(X,
-                Y,
-                max_nonzeros=X.shape[1])
-
+path = fit_path(X, Y, max_nonzeros=X.shape[1])
 ```
 
 The function `fit_path()` returns a list whose values include the fitted coefficients as `B`, an intercept as `B0`, as well as a few other attributes related to the particular path algorithm used. Such details are beyond the scope of this book.
 
 ```python
 path[3]
-
 ```
 In the example above, we see that at the fourth step in the path, we have two nonzero coefficients in `'B'`, corresponding to the value $0.114$ for the penalty parameter `lambda_0`.
 We could make predictions using this sequence of fits on a validation set as a function of `lambda_0`, or with more work using cross-validation.
@@ -357,16 +323,12 @@ be consistent with the rest of this chapter, we use `lambdas`
 rather than `alphas` in what follows.  {At the time of publication, ridge fits like the one in code chunk [22] issue unwarranted convergence warning messages; we expect these to disappear as this package matures.}
 
 ```python
-Xs = X - X.mean(0)[None,:]
+Xs = X - X.mean(0)[None, :]
 X_scale = X.std(0)
-Xs = Xs / X_scale[None,:]
-lambdas = 10**np.linspace(8, -2, 100) / Y.std()
-soln_array = skl.ElasticNet.path(Xs,
-                                 Y,
-                                 l1_ratio=0.,
-                                 alphas=lambdas)[1]
+Xs = Xs / X_scale[None, :]
+lambdas = 10 ** np.linspace(8, -2, 100) / Y.std()
+soln_array = skl.ElasticNet.path(Xs, Y, l1_ratio=0.0, alphas=lambdas)[1]
 soln_array.shape
-
 ```
 Here we extract the array of coefficients corresponding to the solutions along the regularization path.
 By default the `skl.ElasticNet.path` method fits a path along
@@ -387,12 +349,9 @@ columns (one for each value of $\lambda$).
 We transpose this matrix and turn it into a data frame to facilitate viewing and plotting.
 
 ```python
-soln_path = pd.DataFrame(soln_array.T,
-                         columns=D.columns,
-                         index=-np.log(lambdas))
+soln_path = pd.DataFrame(soln_array.T, columns=D.columns, index=-np.log(lambdas))
 soln_path.index.name = "negative log(lambda)"
 soln_path
-
 ```
 
 We plot the paths to get a sense of how the coefficients vary with $\lambda$.
@@ -400,12 +359,11 @@ To control the location of the legend we first set `legend` to `False` in the
 plot method, adding it afterward with the `legend()` method of `ax`.
 
 ```python
-path_fig, ax = subplots(figsize=(8,8))
+path_fig, ax = subplots(figsize=(8, 8))
 soln_path.plot(ax=ax, legend=False)
 ax.set_xlabel(r"$-\log(\lambda)$", fontsize=20)
 ax.set_ylabel("Standardized coefficients", fontsize=20)
 ax.legend(loc="upper left");
-
 ```
 (We have used `latex` formatting in the horizontal label, in order to format the Greek $\lambda$ appropriately.) 
 We expect the coefficient estimates to be much smaller, in terms of
@@ -416,14 +374,12 @@ where $\lambda$ is 25.535.
 ```python
 beta_hat = soln_path.loc[soln_path.index[39]]
 lambdas[39], beta_hat
-
 ```
 
 Let’s compute the $\ell_2$ norm of the standardized coefficients.
 
 ```python
 np.linalg.norm(beta_hat)
-
 ```
 
 In contrast, here is the $\ell_2$ norm when $\lambda$ is 2.44e-01.
@@ -433,7 +389,6 @@ coefficients associated with this smaller value of $\lambda$.
 ```python
 beta_hat = soln_path.loc[soln_path.index[59]]
 lambdas[59], np.linalg.norm(beta_hat)
-
 ```
 Above we normalized `X` upfront, and fit the ridge model using `Xs`.
 The `Pipeline()`  object
@@ -442,17 +397,15 @@ normalization from the fitting of the ridge model itself.
 
 ```python
 ridge = skl.ElasticNet(alpha=lambdas[59], l1_ratio=0)
-scaler = StandardScaler(with_mean=True,  with_std=True)
+scaler = StandardScaler(with_mean=True, with_std=True)
 pipe = Pipeline(steps=[("scaler", scaler), ("ridge", ridge)])
 pipe.fit(X, Y)
-
 ```
 
 We show that it gives the same $\ell_2$ norm as in our previous fit on the standardized data.
 
 ```python
 np.linalg.norm(ridge.coef_)
-
 ```
  Notice that the operation `pipe.fit(X, Y)` above has changed the `ridge` object, and in particular has added attributes such as `coef_` that were not there before. 
 ### Estimating Test Error of Ridge Regression
@@ -467,17 +420,16 @@ We fix the random state of the splitter
 so that the results obtained will be reproducible.
 
 ```python
-validation = skm.ShuffleSplit(n_splits=1,
-                              test_size=0.5,
-                              random_state=0)
+validation = skm.ShuffleSplit(n_splits=1, test_size=0.5, random_state=0)
 ridge.alpha = 0.01
-results = skm.cross_validate(ridge,
-                             X,
-                             Y,
-                             scoring="neg_mean_squared_error",
-                             cv=validation)
+results = skm.cross_validate(
+    ridge,
+    X,
+    Y,
+    scoring="neg_mean_squared_error",
+    cv=validation,
+)
 -results["test_score"]
-
 ```
 
 The test MSE is 1.342e+05.  Note
@@ -489,13 +441,14 @@ means $10^{10}$.
 
 ```python
 ridge.alpha = 1e10
-results = skm.cross_validate(ridge,
-                             X,
-                             Y,
-                             scoring="neg_mean_squared_error",
-                             cv=validation)
+results = skm.cross_validate(
+    ridge,
+    X,
+    Y,
+    scoring="neg_mean_squared_error",
+    cv=validation,
+)
 -results["test_score"]
-
 ```
 Obviously choosing $\lambda=0.01$ is arbitrary,  so we will  use cross-validation or the validation-set
 approach to choose the tuning parameter $\lambda$.
@@ -507,40 +460,38 @@ to choose $\lambda$.
 
 ```python
 param_grid = {"ridge__alpha": lambdas}
-grid = skm.GridSearchCV(pipe,
-                        param_grid,
-                        cv=validation,
-                        scoring="neg_mean_squared_error")
+grid = skm.GridSearchCV(
+    pipe,
+    param_grid,
+    cv=validation,
+    scoring="neg_mean_squared_error",
+)
 grid.fit(X, Y)
 grid.best_params_["ridge__alpha"]
 grid.best_estimator_
-
 ```
 
 Alternatively, we can use 5-fold cross-validation.
 
 ```python
-grid = skm.GridSearchCV(pipe,
-                        param_grid,
-                        cv=kfold,
-                        scoring="neg_mean_squared_error")
+grid = skm.GridSearchCV(pipe, param_grid, cv=kfold, scoring="neg_mean_squared_error")
 grid.fit(X, Y)
 grid.best_params_["ridge__alpha"]
 grid.best_estimator_
-
 ```
 Recall we set up the `kfold` object for 5-fold cross-validation on page~\pageref{line:choos-among-models}. We now plot the cross-validated MSE as a function of $-\log(\lambda)$, which has shrinkage decreasing from left
 to right.
 
 ```python
-ridge_fig, ax = subplots(figsize=(8,8))
-ax.errorbar(-np.log(lambdas),
-            -grid.cv_results_["mean_test_score"],
-            yerr=grid.cv_results_["std_test_score"] / np.sqrt(K))
-ax.set_ylim([50000,250000])
+ridge_fig, ax = subplots(figsize=(8, 8))
+ax.errorbar(
+    -np.log(lambdas),
+    -grid.cv_results_["mean_test_score"],
+    yerr=grid.cv_results_["std_test_score"] / np.sqrt(K),
+)
+ax.set_ylim([50000, 250000])
 ax.set_xlabel(r"$-\log(\lambda)$", fontsize=20)
 ax.set_ylabel("Cross-validated MSE", fontsize=20);
-
 ```
 
 One can cross-validate different metrics to choose a parameter. The default
@@ -548,23 +499,21 @@ metric for `skl.ElasticNet()` is test $R^2$.
 Let’s compare $R^2$ to MSE for cross-validation here.
 
 ```python
-grid_r2 = skm.GridSearchCV(pipe,
-                           param_grid,
-                           cv=kfold)
+grid_r2 = skm.GridSearchCV(pipe, param_grid, cv=kfold)
 grid_r2.fit(X, Y)
-
 ```
 
 Finally, let’s plot the results for cross-validated $R^2$.
 
 ```python
-r2_fig, ax = subplots(figsize=(8,8))
-ax.errorbar(-np.log(lambdas),
-            grid_r2.cv_results_["mean_test_score"],
-            yerr=grid_r2.cv_results_["std_test_score"] / np.sqrt(K))
+r2_fig, ax = subplots(figsize=(8, 8))
+ax.errorbar(
+    -np.log(lambdas),
+    grid_r2.cv_results_["mean_test_score"],
+    yerr=grid_r2.cv_results_["std_test_score"] / np.sqrt(K),
+)
 ax.set_xlabel(r"$-\log(\lambda)$", fontsize=20)
 ax.set_ylabel("Cross-validated $R^2$", fontsize=20);
-
 ```
 
 ### Fast Cross-Validation for Solution Paths
@@ -577,13 +526,9 @@ Nevertheless, the results are similar as the normalization
 is relatively stable across folds.
 
 ```python
-ridgeCV = skl.ElasticNetCV(alphas=lambdas,
-                           l1_ratio=0,
-                           cv=kfold)
-pipeCV = Pipeline(steps=[("scaler", scaler),
-                         ("ridge", ridgeCV)])
+ridgeCV = skl.ElasticNetCV(alphas=lambdas, l1_ratio=0, cv=kfold)
+pipeCV = Pipeline(steps=[("scaler", scaler), ("ridge", ridgeCV)])
 pipeCV.fit(X, Y)
-
 ```
 
 Let’s produce a plot again of the cross-validation error to see that
@@ -591,15 +536,16 @@ it is similar to using `skm.GridSearchCV`.
 
 ```python
 tuned_ridge = pipeCV.named_steps["ridge"]
-ridgeCV_fig, ax = subplots(figsize=(8,8))
-ax.errorbar(-np.log(lambdas),
-            tuned_ridge.mse_path_.mean(1),
-            yerr=tuned_ridge.mse_path_.std(1) / np.sqrt(K))
+ridgeCV_fig, ax = subplots(figsize=(8, 8))
+ax.errorbar(
+    -np.log(lambdas),
+    tuned_ridge.mse_path_.mean(1),
+    yerr=tuned_ridge.mse_path_.std(1) / np.sqrt(K),
+)
 ax.axvline(-np.log(tuned_ridge.alpha_), c="k", ls="--")
-ax.set_ylim([50000,250000])
+ax.set_ylim([50000, 250000])
 ax.set_xlabel(r"$-\log(\lambda)$", fontsize=20)
 ax.set_ylabel("Cross-validated MSE", fontsize=20);
-
 ```
 
 We see that the value of $\lambda$ that results in the
@@ -609,7 +555,6 @@ associated with this value of $\lambda$?
 
 ```python
 np.min(tuned_ridge.mse_path_.mean(1))
-
 ```
 
 This represents a further improvement over the test MSE that we got
@@ -619,7 +564,6 @@ at this value of  $\lambda$.
 
 ```python
 tuned_ridge.coef_
-
 ```
 As expected, none of the coefficients are zero—ridge regression does
 not perform variable selection!
@@ -642,28 +586,21 @@ regression tuned using 5-fold cross-validation.  This can be achieved
 in code as follows:
 
 ```python
-outer_valid = skm.ShuffleSplit(n_splits=1,
-                               test_size=0.25,
-                               random_state=1)
-inner_cv = skm.KFold(n_splits=5,
-                     shuffle=True,
-                     random_state=2)
-ridgeCV = skl.ElasticNetCV(alphas=lambdas,
-                           l1_ratio=0,
-                           cv=inner_cv)
-pipeCV = Pipeline(steps=[("scaler", scaler),
-                         ("ridge", ridgeCV)]);
-
+outer_valid = skm.ShuffleSplit(n_splits=1, test_size=0.25, random_state=1)
+inner_cv = skm.KFold(n_splits=5, shuffle=True, random_state=2)
+ridgeCV = skl.ElasticNetCV(alphas=lambdas, l1_ratio=0, cv=inner_cv)
+pipeCV = Pipeline(steps=[("scaler", scaler), ("ridge", ridgeCV)]);
 ```
 
 ```python
-results = skm.cross_validate(pipeCV,
-                             X,
-                             Y,
-                             cv=outer_valid,
-                             scoring="neg_mean_squared_error")
+results = skm.cross_validate(
+    pipeCV,
+    X,
+    Y,
+    cv=outer_valid,
+    scoring="neg_mean_squared_error",
+)
 -results["test_score"]
-
 ```
 
 ### The Lasso
@@ -677,38 +614,27 @@ regression. In order to fit a lasso model, we once again use the
 fitting a ridge model.
 
 ```python
-lassoCV = skl.ElasticNetCV(n_alphas=100,
-                           l1_ratio=1,
-                           cv=kfold)
-pipeCV = Pipeline(steps=[("scaler", scaler),
-                         ("lasso", lassoCV)])
+lassoCV = skl.ElasticNetCV(n_alphas=100, l1_ratio=1, cv=kfold)
+pipeCV = Pipeline(steps=[("scaler", scaler), ("lasso", lassoCV)])
 pipeCV.fit(X, Y)
 tuned_lasso = pipeCV.named_steps["lasso"]
 tuned_lasso.alpha_
-
 ```
 
 ```python
-lambdas, soln_array = skl.Lasso.path(Xs,
-                                    Y,
-                                    l1_ratio=1,
-                                    n_alphas=100)[:2]
-soln_path = pd.DataFrame(soln_array.T,
-                         columns=D.columns,
-                         index=-np.log(lambdas))
-
+lambdas, soln_array = skl.Lasso.path(Xs, Y, l1_ratio=1, n_alphas=100)[:2]
+soln_path = pd.DataFrame(soln_array.T, columns=D.columns, index=-np.log(lambdas))
 ```
 We can see from the coefficient plot of the standardized coefficients that depending on the choice of
 tuning parameter, some of the coefficients will be exactly equal to
 zero.
 
 ```python
-path_fig, ax = subplots(figsize=(8,8))
+path_fig, ax = subplots(figsize=(8, 8))
 soln_path.plot(ax=ax, legend=False)
 ax.legend(loc="upper left")
 ax.set_xlabel(r"$-\log(\lambda)$", fontsize=20)
 ax.set_ylabel("Standardized coefficiients", fontsize=20);
-
 ```
 The smallest cross-validated error is lower than the test set MSE of the null model
 and of least squares, and very similar to the test MSE of 115526.71 of ridge
@@ -716,18 +642,19 @@ regression (page~\pageref{page:MSECVRidge}) with $\lambda$ chosen by cross-valid
 
 ```python
 np.min(tuned_lasso.mse_path_.mean(1))
-
 ```
 
 Let’s again produce a plot of the cross-validation error.
 
 ```python
-lassoCV_fig, ax = subplots(figsize=(8,8))
-ax.errorbar(-np.log(tuned_lasso.alphas_),
-            tuned_lasso.mse_path_.mean(1),
-            yerr=tuned_lasso.mse_path_.std(1) / np.sqrt(K))
+lassoCV_fig, ax = subplots(figsize=(8, 8))
+ax.errorbar(
+    -np.log(tuned_lasso.alphas_),
+    tuned_lasso.mse_path_.mean(1),
+    yerr=tuned_lasso.mse_path_.std(1) / np.sqrt(K),
+)
 ax.axvline(-np.log(tuned_lasso.alpha_), c="k", ls="--")
-ax.set_ylim([50000,250000])
+ax.set_ylim([50000, 250000])
 ax.set_xlabel(r"$-\log(\lambda)$", fontsize=20)
 ax.set_ylabel("Cross-validated MSE", fontsize=20);
 ```
@@ -740,7 +667,6 @@ variables.
 
 ```python
 tuned_lasso.coef_
-
 ```
 
 As in ridge regression, we could evaluate the test error
@@ -766,11 +692,9 @@ the `OLS()` function seen earlier in Section~\ref{Ch6-varselect-lab:lab-1-subset
 ```python
 pca = PCA(n_components=2)
 linreg = skl.LinearRegression()
-pipe = Pipeline([("pca", pca),
-                 ("linreg", linreg)])
+pipe = Pipeline([("pca", pca), ("linreg", linreg)])
 pipe.fit(X, Y)
 pipe.named_steps["linreg"].coef_
-
 ```
 
 When performing PCA, the results vary depending
@@ -779,12 +703,9 @@ As in the earlier examples, this can be accomplished
 by including an additional step in the pipeline.
 
 ```python
-pipe = Pipeline([("scaler", scaler),
-                 ("pca", pca),
-                 ("linreg", linreg)])
+pipe = Pipeline([("scaler", scaler), ("pca", pca), ("linreg", linreg)])
 pipe.fit(X, Y)
 pipe.named_steps["linreg"].coef_
-
 ```
 
 We can of course use CV to choose the number of components, by
@@ -794,27 +715,24 @@ case fixing the parameters to vary the
 
 ```python
 param_grid = {"pca__n_components": range(1, 20)}
-grid = skm.GridSearchCV(pipe,
-                        param_grid,
-                        cv=kfold,
-                        scoring="neg_mean_squared_error")
+grid = skm.GridSearchCV(pipe, param_grid, cv=kfold, scoring="neg_mean_squared_error")
 grid.fit(X, Y)
-
 ```
 
 Let’s plot the results as we have for other methods.
 
 ```python
-pcr_fig, ax = subplots(figsize=(8,8))
+pcr_fig, ax = subplots(figsize=(8, 8))
 n_comp = param_grid["pca__n_components"]
-ax.errorbar(n_comp,
-            -grid.cv_results_["mean_test_score"],
-            grid.cv_results_["std_test_score"] / np.sqrt(K))
+ax.errorbar(
+    n_comp,
+    -grid.cv_results_["mean_test_score"],
+    grid.cv_results_["std_test_score"] / np.sqrt(K),
+)
 ax.set_ylabel("Cross-validated MSE", fontsize=20)
 ax.set_xlabel("# principal components", fontsize=20)
 ax.set_xticks(n_comp[::2])
-ax.set_ylim([50000,250000]);
-
+ax.set_ylim([50000, 250000]);
 ```
 
 We see that the smallest cross-validation error occurs when
@@ -832,13 +750,8 @@ these splits.
 
 ```python
 Xn = np.zeros((X.shape[0], 1))
-cv_null = skm.cross_validate(linreg,
-                             Xn,
-                             Y,
-                             cv=kfold,
-                             scoring="neg_mean_squared_error")
+cv_null = skm.cross_validate(linreg, Xn, Y, cv=kfold, scoring="neg_mean_squared_error")
 -cv_null["test_score"].mean()
-
 ```
 
 The `explained_variance_ratio_`
@@ -848,7 +761,6 @@ detail in Section~\ref{Ch10:sec:pca}.
 
 ```python
 pipe.named_steps["pca"].explained_variance_ratio_
-
 ```
 
 Briefly, we can think of
@@ -865,38 +777,33 @@ Partial least squares (PLS) is implemented in the
  
 
 ```python
-pls = PLSRegression(n_components=2,
-                    scale=True)
+pls = PLSRegression(n_components=2, scale=True)
 pls.fit(X, Y)
-
 ```
 
 As was the case in PCR, we will want to
 use CV to choose the number of components.
 
 ```python
-param_grid = {"n_components":range(1, 20)}
-grid = skm.GridSearchCV(pls,
-                        param_grid,
-                        cv=kfold,
-                        scoring="neg_mean_squared_error")
+param_grid = {"n_components": range(1, 20)}
+grid = skm.GridSearchCV(pls, param_grid, cv=kfold, scoring="neg_mean_squared_error")
 grid.fit(X, Y)
-
 ```
 
 As for our other methods, we plot the MSE.
 
 ```python
-pls_fig, ax = subplots(figsize=(8,8))
+pls_fig, ax = subplots(figsize=(8, 8))
 n_comp = param_grid["n_components"]
-ax.errorbar(n_comp,
-            -grid.cv_results_["mean_test_score"],
-            grid.cv_results_["std_test_score"] / np.sqrt(K))
+ax.errorbar(
+    n_comp,
+    -grid.cv_results_["mean_test_score"],
+    grid.cv_results_["std_test_score"] / np.sqrt(K),
+)
 ax.set_ylabel("Cross-validated MSE", fontsize=20)
 ax.set_xlabel("# principal components", fontsize=20)
 ax.set_xticks(n_comp[::2])
-ax.set_ylim([50000,250000]);
-
+ax.set_ylim([50000, 250000]);
 ```
 
 CV error is minimized at 12,

@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -33,7 +33,6 @@ import pandas as pd
 from ISLP import load_data
 from ISLP.models import ModelSpec as MS
 from matplotlib.pyplot import subplots
-
 ```
 
 We  also collect the new imports
@@ -43,7 +42,6 @@ needed for this lab.
 from ISLP.survival import sim_time
 from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import logrank_test, multivariate_logrank_test
-
 ```
 
 ## Brain Cancer Data
@@ -53,7 +51,6 @@ We begin with the `BrainCancer` data set, contained in the `ISLP` package.
 ```python
 BrainCancer = load_data("BrainCancer")
 BrainCancer.columns
-
 ```
 
 The rows index the 88 patients, while the 8 columns contain the predictors and outcome variables.
@@ -61,17 +58,14 @@ We first briefly examine the data.
 
 ```python
 BrainCancer["sex"].value_counts()
-
 ```
 
 ```python
 BrainCancer["diagnosis"].value_counts()
-
 ```
 
 ```python
 BrainCancer["status"].value_counts()
-
 ```
 
 Before beginning an analysis, it is important to know how the
@@ -94,11 +88,10 @@ by setting the `alpha` argument to one minus the desired
 confidence level.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 km = KaplanMeierFitter()
 km_brain = km.fit(BrainCancer["time"], BrainCancer["status"])
 km_brain.plot(label="Kaplan Meier estimate", ax=ax)
-
 ```
 
 Next we create Kaplan-Meier survival curves that are stratified by
@@ -121,13 +114,12 @@ interpolation is a powerful technique to format strings ---
 `Python` has many ways to facilitate such operations.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 by_sex = {}
 for sex, df in BrainCancer.groupby("sex"):
     by_sex[sex] = df
     km_sex = km.fit(df["time"], df["status"])
     km_sex.plot(label="Sex=%s" % sex, ax=ax)
-
 ```
 
 As discussed in Section~\ref{sec:logrank}, we can perform a
@@ -137,11 +129,12 @@ The first two arguments are the event times, with the second
 denoting the corresponding (optional) censoring indicators.
 
 ```python
-logrank_test(by_sex["Male"]["time"],
-             by_sex["Female"]["time"],
-             by_sex["Male"]["status"],
-             by_sex["Female"]["status"])
-
+logrank_test(
+    by_sex["Male"]["time"],
+    by_sex["Female"]["time"],
+    by_sex["Male"]["status"],
+    by_sex["Female"]["status"],
+)
 ```
 
 The resulting $p$-value is $0.23$, indicating no evidence of a
@@ -152,15 +145,11 @@ from `lifelines` to fit Cox proportional hazards models.
 To begin, we consider a model that uses  `sex`  as the only predictor.
 
 ```python
-coxph = CoxPHFitter # shorthand
+coxph = CoxPHFitter  # shorthand
 sex_df = BrainCancer[["time", "status", "sex"]]
-model_df = MS(["time", "status", "sex"],
-              intercept=False).fit_transform(sex_df)
-cox_fit = coxph().fit(model_df,
-                      "time",
-                      "status")
+model_df = MS(["time", "status", "sex"], intercept=False).fit_transform(sex_df)
+cox_fit = coxph().fit(model_df, "time", "status")
 cox_fit.summary[["coef", "se(coef)", "p"]]
-
 ```
 
 The first argument to `fit` should be a data frame containing
@@ -174,7 +163,6 @@ with no features as follows:
 
 ```python
 cox_fit.log_likelihood_ratio_test()
-
 ```
 
 Regardless of which test we use, we see that there is no clear
@@ -190,11 +178,8 @@ we drop that observation before continuing.
 cleaned = BrainCancer.dropna()
 all_MS = MS(cleaned.columns, intercept=False)
 all_df = all_MS.fit_transform(cleaned)
-fit_all = coxph().fit(all_df,
-                      "time",
-                      "status")
+fit_all = coxph().fit(all_df, "time", "status")
 fit_all.summary[["coef", "se(coef)", "p"]]
-
 ```
 
  The `diagnosis` variable has been coded so that the baseline
@@ -215,12 +200,15 @@ or not.
 
 ```python
 levels = cleaned["diagnosis"].unique()
+
+
 def representative(series):
     if hasattr(series.dtype, "categories"):
         return pd.Series.mode(series)
     return series.mean()
-modal_data = cleaned.apply(representative, axis=0)
 
+
+modal_data = cleaned.apply(representative, axis=0)
 ```
 
 We make four
@@ -228,11 +216,9 @@ copies of the column means and assign the `diagnosis` column to be the four diff
 diagnoses.
 
 ```python
-modal_df = pd.DataFrame(
-              [modal_data.iloc[0] for _ in range(len(levels))])
+modal_df = pd.DataFrame([modal_data.iloc[0] for _ in range(len(levels))])
 modal_df["diagnosis"] = levels
 modal_df
-
 ```
 
 We then construct the model matrix based on the model specification `all_MS` used to fit
@@ -242,7 +228,6 @@ the model, and name the rows according to the levels of `diagnosis`.
 modal_X = all_MS.transform(modal_df)
 modal_X.index = levels
 modal_X
-
 ```
 
 We can use the `predict_survival_function()` method to obtain the estimated survival function.
@@ -250,7 +235,6 @@ We can use the `predict_survival_function()` method to obtain the estimated surv
 ```python
 predicted_survival = fit_all.predict_survival_function(modal_X)
 predicted_survival
-
 ```
 This returns a data frame,
 whose plot methods yields the different survival curves. To avoid clutter in
@@ -259,7 +243,6 @@ the plots, we do not display confidence intervals.
 ```python
 fig, ax = subplots(figsize=(8, 8))
 predicted_survival.plot(ax=ax);
-
 ```
 
 ## Publication Data
@@ -270,14 +253,13 @@ stratified on the  `posres`  variable, which records whether the
 study had a positive or negative result.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 Publication = load_data("Publication")
 by_result = {}
 for result, df in Publication.groupby("posres"):
     by_result[result] = df
     km_result = km.fit(df["time"], df["status"])
     km_result.plot(label="Result=%d" % result, ax=ax)
-
 ```
 
 As discussed previously, the $p$-values from fitting Cox’s
@@ -286,15 +268,9 @@ large, providing no evidence of a difference in time-to-publication
 between studies with positive versus negative results.
 
 ```python
-posres_df = MS(["posres",
-                "time",
-                "status"],
-                intercept=False).fit_transform(Publication)
-posres_fit = coxph().fit(posres_df,
-                         "time",
-                         "status")
+posres_df = MS(["posres", "time", "status"], intercept=False).fit_transform(Publication)
+posres_fit = coxph().fit(posres_df, "time", "status")
 posres_fit.summary[["coef", "se(coef)", "p"]]
-
 ```
 
 However, the results change dramatically when we include other
@@ -302,12 +278,10 @@ predictors in the model. Here we exclude the funding mechanism
 variable.
 
 ```python
-model = MS(Publication.columns.drop("mech"),
-           intercept=False)
-coxph().fit(model.fit_transform(Publication),
-            "time",
-            "status").summary[["coef", "se(coef)", "p"]]
-
+model = MS(Publication.columns.drop("mech"), intercept=False)
+coxph().fit(model.fit_transform(Publication), "time", "status").summary[
+    ["coef", "se(coef)", "p"]
+]
 ```
 
 We see that there are a number of statistically significant variables,
@@ -335,27 +309,22 @@ any number of operators from $5$ to $15$ is equally likely.
 ```python
 rng = np.random.default_rng(10)
 N = 2000
-Operators = rng.choice(np.arange(5, 16),
-                       N,
-                       replace=True)
-Center = rng.choice(["A", "B", "C"],
-                    N,
-                    replace=True)
-Time = rng.choice(["Morn.", "After.", "Even."],
-                   N,
-                   replace=True)
-D = pd.DataFrame({"Operators": Operators,
-                  "Center": pd.Categorical(Center),
-                  "Time": pd.Categorical(Time)})
+Operators = rng.choice(np.arange(5, 16), N, replace=True)
+Center = rng.choice(["A", "B", "C"], N, replace=True)
+Time = rng.choice(["Morn.", "After.", "Even."], N, replace=True)
+D = pd.DataFrame(
+    {
+        "Operators": Operators,
+        "Center": pd.Categorical(Center),
+        "Time": pd.Categorical(Time),
+    },
+)
 ```
 
 We then build a model matrix (omitting the intercept)
 
 ```python
-model = MS(["Operators",
-            "Center",
-            "Time"],
-           intercept=False)
+model = MS(["Operators", "Center", "Time"], intercept=False)
 X = model.fit_transform(D)
 ```
 
@@ -366,7 +335,6 @@ of the variable is dropped.
 
 ```python
 X[:5]
-
 ```
 
 Next,  we specify the coefficients and the hazard function.
@@ -375,7 +343,6 @@ Next,  we specify the coefficients and the hazard function.
 true_beta = np.array([0.04, -0.3, 0, 0.2, -0.2])
 true_linpred = X.dot(true_beta)
 hazard = lambda t: 1e-5 * t
-
 ```
 
 Here, we have set the coefficient associated with `Operators` to
@@ -402,7 +369,6 @@ to simulate data based on values of the linear predictor
 
 ```python
 cum_hazard = lambda t: 1e-5 * t**2 / 2
-
 ```
 We are now ready to generate data under the Cox proportional hazards
 model. We truncate the maximum time to 1000 seconds to keep
@@ -412,10 +378,8 @@ a cumulative hazard function and a
 random number generator.
 
 ```python
-W = np.array([sim_time(l, cum_hazard, rng)
-              for l in true_linpred])
+W = np.array([sim_time(l, cum_hazard, rng) for l in true_linpred])
 D["Wait time"] = np.clip(W, 0, 1000)
-
 ```
 
 We now simulate our censoring variable, for which we assume
@@ -423,42 +387,36 @@ We now simulate our censoring variable, for which we assume
 customer hung up (`Failed==0`).
 
 ```python
-D["Failed"] = rng.choice([1, 0],
-                         N,
-                         p=[0.9, 0.1])
+D["Failed"] = rng.choice([1, 0], N, p=[0.9, 0.1])
 D[:5]
-
 ```
 
 ```python
 D["Failed"].mean()
-
 ```
 
 We now plot  Kaplan-Meier survival curves. First, we stratify by `Center`.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 by_center = {}
 for center, df in D.groupby("Center"):
     by_center[center] = df
     km_center = km.fit(df["Wait time"], df["Failed"])
     km_center.plot(label="Center=%s" % center, ax=ax)
 ax.set_title("Probability of Still Being on Hold")
-
 ```
 
 Next, we stratify by `Time`.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 by_time = {}
 for time, df in D.groupby("Time"):
     by_time[time] = df
     km_time = km.fit(df["Wait time"], df["Failed"])
     km_time.plot(label="Time=%s" % time, ax=ax)
 ax.set_title("Probability of Still Being on Hold")
-
 ```
 
 It seems that calls at Call Center B take longer to be answered than
@@ -468,19 +426,13 @@ log-rank test to determine whether these differences are statistically
 significant using the function `multivariate_logrank_test()`.
 
 ```python
-multivariate_logrank_test(D["Wait time"],
-                          D["Center"],
-                          D["Failed"])
-
+multivariate_logrank_test(D["Wait time"], D["Center"], D["Failed"])
 ```
 
 Next, we consider the  effect of `Time`.
 
 ```python
-multivariate_logrank_test(D["Wait time"],
-                          D["Time"],
-                          D["Failed"])
-
+multivariate_logrank_test(D["Wait time"], D["Time"], D["Failed"])
 ```
 
 As in the case of a categorical variable with 2 levels, these
@@ -489,25 +441,17 @@ from the Cox proportional hazards model. First, we
 look at the results for  `Center`.
 
 ```python
-X = MS(["Wait time",
-        "Failed",
-        "Center"],
-        intercept=False).fit_transform(D)
+X = MS(["Wait time", "Failed", "Center"], intercept=False).fit_transform(D)
 F = coxph().fit(X, "Wait time", "Failed")
 F.log_likelihood_ratio_test()
-
 ```
 
 Next, we look at the results for `Time`.
 
 ```python
-X = MS(["Wait time",
-        "Failed",
-        "Time"],
-       intercept=False).fit_transform(D)
+X = MS(["Wait time", "Failed", "Time"], intercept=False).fit_transform(D)
 F = coxph().fit(X, "Wait time", "Failed")
 F.log_likelihood_ratio_test()
-
 ```
 
 We find that differences between centers are highly significant, as
@@ -516,14 +460,9 @@ are differences between times of day.
 Finally, we fit Cox's proportional hazards model to the data.
 
 ```python
-X = MS(D.columns,
-       intercept=False).fit_transform(D)
-fit_queuing = coxph().fit(
-                  X,
-                 "Wait time",
-                 "Failed")
+X = MS(D.columns, intercept=False).fit_transform(D)
+fit_queuing = coxph().fit(X, "Wait time", "Failed")
 fit_queuing.summary[["coef", "se(coef)", "p"]]
-
 ```
 
 The $p$-values for Center B and evening time

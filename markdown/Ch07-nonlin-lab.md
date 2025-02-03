@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -46,7 +46,6 @@ from pygam import LinearGAM, LogisticGAM
 from pygam import f as f_gam
 from pygam import l as l_gam
 from pygam import s as s_gam
-
 ```
 
 ## Polynomial Regression and Step Functions
@@ -57,7 +56,6 @@ Let's  begin by loading the data.
 Wage = load_data("Wage")
 y = Wage["wage"]
 age = Wage["age"]
-
 ```
 
 Throughout most of this lab, our response is `Wage['wage']`, which
@@ -69,7 +67,6 @@ that will fit a $4$th degree polynomial in `age`.
 poly_age = MS([poly("age", degree=4)]).fit(Wage)
 M = sm.OLS(y, poly_age.transform(Wage)).fit()
 summarize(M)
-
 ```
 
 This polynomial is constructed using the function `poly()`,
@@ -92,11 +89,8 @@ We now create a grid of values for `age` at which we want
 predictions.
 
 ```python
-age_grid = np.linspace(age.min(),
-                       age.max(),
-                       100)
+age_grid = np.linspace(age.min(), age.max(), 100)
 age_df = pd.DataFrame({"age": age_grid})
-
 ```
 
 Finally, we wish to plot the data and add the fit from the fourth-degree polynomial. As we will make
@@ -109,30 +103,23 @@ an argument for `basis` we can produce and plot the results with several differe
 transforms, such as the splines we will see shortly. 
 
 ```python
-def plot_wage_fit(age_df,
-                  basis,
-                  title):
-
+def plot_wage_fit(age_df, basis, title):
     X = basis.transform(Wage)
     Xnew = basis.transform(age_df)
     M = sm.OLS(y, X).fit()
     preds = M.get_prediction(Xnew)
     bands = preds.conf_int(alpha=0.05)
-    fig, ax = subplots(figsize=(8,8))
-    ax.scatter(age,
-               y,
-               facecolor="gray",
-               alpha=0.5)
-    for val, ls in zip([preds.predicted_mean,
-                      bands[:,0],
-                      bands[:,1]],
-                     ["b","r--","r--"]):
+    fig, ax = subplots(figsize=(8, 8))
+    ax.scatter(age, y, facecolor="gray", alpha=0.5)
+    for val, ls in zip(
+        [preds.predicted_mean, bands[:, 0], bands[:, 1]],
+        ["b", "r--", "r--"],
+    ):
         ax.plot(age_df.values, val, ls, linewidth=3)
     ax.set_title(title, fontsize=20)
     ax.set_xlabel("Age", fontsize=20)
     ax.set_ylabel("Wage", fontsize=20)
     return ax
-
 ```
 We include an argument `alpha` to `ax.scatter()`
 to add some transparency to the points. This provides a visual indication
@@ -146,10 +133,7 @@ We now plot the fit of the fourth-degree polynomial using this
 function.
 
 ```python
-plot_wage_fit(age_df,
-              poly_age,
-              "Degree-4 Polynomial");
-
+plot_wage_fit(age_df, poly_age, "Degree-4 Polynomial");
 ```
 
 With  polynomial regression we must decide on the degree of
@@ -175,12 +159,9 @@ models and sequentially compare the simpler model to the more complex
 model.
 
 ```python
-models = [MS([poly("age", degree=d)])
-          for d in range(1, 6)]
+models = [MS([poly("age", degree=d)]) for d in range(1, 6)]
 Xs = [model.fit_transform(Wage) for model in models]
-anova_lm(*[sm.OLS(y, X_).fit()
-           for X_ in Xs])
-
+anova_lm(*[sm.OLS(y, X_).fit() for X_ in Xs])
 ```
 
 Notice the `*` in the `anova_lm()` line above. This
@@ -205,7 +186,6 @@ that `poly()`  creates orthogonal polynomials.
 
 ```python
 summarize(M)
-
 ```
 
 Notice that the p-values are the same, and in fact the square of
@@ -213,8 +193,7 @@ the  t-statistics are equal to the F-statistics from the
 `anova_lm()`  function;  for example: 
 
 ```python
-(-11.983)**2
-
+(-11.983) ** 2
 ```
 
 However, the ANOVA method works whether or not we used orthogonal
@@ -224,12 +203,9 @@ models, which all have a linear term in `education` and a
 polynomial in `age` of different degrees:
 
 ```python
-models = [MS(["education", poly("age", degree=d)])
-          for d in range(1, 4)]
-XEs = [model.fit_transform(Wage)
-       for model in models]
+models = [MS(["education", poly("age", degree=d)]) for d in range(1, 4)]
+XEs = [model.fit_transform(Wage) for model in models]
 anova_lm(*[sm.OLS(y, X_).fit() for X_ in XEs])
-
 ```
 
 As an alternative to using hypothesis tests and ANOVA, we could choose
@@ -243,13 +219,10 @@ to fit a polynomial logistic regression model.
 
 ```python
 X = poly_age.transform(Wage)
-high_earn = Wage["high_earn"] = y > 250 # shorthand
-glm = sm.GLM(y > 250,
-             X,
-             family=sm.families.Binomial())
+high_earn = Wage["high_earn"] = y > 250  # shorthand
+glm = sm.GLM(y > 250, X, family=sm.families.Binomial())
 B = glm.fit()
 summarize(B)
-
 ```
 
 Once again, we make predictions using the `get_prediction()`  method.
@@ -258,29 +231,28 @@ Once again, we make predictions using the `get_prediction()`  method.
 newX = poly_age.transform(age_df)
 preds = B.get_prediction(newX)
 bands = preds.conf_int(alpha=0.05)
-
 ```
 
 We now plot the estimated relationship.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 rng = np.random.default_rng(0)
-ax.scatter(age +
-           0.2 * rng.uniform(size=y.shape[0]),
-           np.where(high_earn, 0.198, 0.002),
-           fc="gray",
-           marker="|")
-for val, ls in zip([preds.predicted_mean,
-                  bands[:,0],
-                  bands[:,1]],
-                 ["b","r--","r--"]):
+ax.scatter(
+    age + 0.2 * rng.uniform(size=y.shape[0]),
+    np.where(high_earn, 0.198, 0.002),
+    fc="gray",
+    marker="|",
+)
+for val, ls in zip(
+    [preds.predicted_mean, bands[:, 0], bands[:, 1]],
+    ["b", "r--", "r--"],
+):
     ax.plot(age_df.values, val, ls, linewidth=3)
 ax.set_title("Degree-4 Polynomial", fontsize=20)
 ax.set_xlabel("Age", fontsize=20)
-ax.set_ylim([0,0.2])
+ax.set_ylim([0, 0.2])
 ax.set_ylabel("P(Wage > 250)", fontsize=20);
-
 ```
 We have drawn the `age` values corresponding to the observations with
 `wage` values above 250 as gray marks on the top of the plot, and
@@ -300,7 +272,6 @@ of the levels.
 ```python
 cut_age = pd.qcut(age, 4)
 summarize(sm.OLS(y, pd.get_dummies(cut_age)).fit())
-
 ```
 
 Here `pd.qcut()`  automatically picked the cutpoints based on the quantiles 25%, 50% and 75%, which results in four regions.  We could also have specified our own
@@ -329,10 +300,9 @@ knots. By default, the B-splines produced are cubic. To change the degree, use
 the argument `degree`.
 
 ```python
-bs_ = BSpline(internal_knots=[25,40,60], intercept=True).fit(age)
+bs_ = BSpline(internal_knots=[25, 40, 60], intercept=True).fit(age)
 bs_age = bs_.transform(age)
 bs_age.shape
-
 ```
 This results in a seven-column matrix, which is what is expected for a cubic-spline basis with 3 interior knots. 
 We can form this same matrix using the `bs()` object,
@@ -341,22 +311,18 @@ which facilitates adding this to a model-matrix builder (as in `poly()` versus i
 We now fit a cubic spline model to the `Wage`  data. 
 
 ```python
-bs_age = MS([bs("age", internal_knots=[25,40,60])])
+bs_age = MS([bs("age", internal_knots=[25, 40, 60])])
 Xbs = bs_age.fit_transform(Wage)
 M = sm.OLS(y, Xbs).fit()
 summarize(M)
-
 ```
 The column names are a little cumbersome, and have caused us to truncate the printed summary. They can be set on construction using the `name` argument as follows.
 
 ```python
-bs_age = MS([bs("age",
-                internal_knots=[25,40,60],
-                name="bs(age)")])
+bs_age = MS([bs("age", internal_knots=[25, 40, 60], name="bs(age)")])
 Xbs = bs_age.fit_transform(Wage)
 M = sm.OLS(y, Xbs).fit()
 summarize(M)
-
 ```
 
 Notice that there are 6 spline coefficients rather than 7. This is because, by default,
@@ -372,7 +338,6 @@ We can see these chosen knots most easily using `Bspline()` directly:
 
 ```python
 BSpline(df=6).fit(age).internal_knots_
-
 ```
  When asking for six degrees of freedom,
 the transform chooses knots at ages 33.75, 42.0, and 51.0,
@@ -385,12 +350,9 @@ in piecewise constant functions, as in our example with
 `pd.qcut()` above.
 
 ```python
-bs_age0 = MS([bs("age",
-                 df=3,
-                 degree=0)]).fit(Wage)
+bs_age0 = MS([bs("age", df=3, degree=0)]).fit(Wage)
 Xbs0 = bs_age0.transform(Wage)
 summarize(sm.OLS(y, Xbs0).fit())
-
 ```
 This fit should be compared with cell [15] where we use `qcut()`
 to create four bins by cutting at the 25%, 50% and 75% quantiles of
@@ -421,10 +383,7 @@ summarize(M_ns)
 We now plot the natural spline using our plotting function.
 
 ```python
-plot_wage_fit(age_df,
-              ns_age,
-              "Natural spline, df=5");
-
+plot_wage_fit(age_df, ns_age, "Natural spline, df=5");
 ```
 
 ## Smoothing Splines and GAMs
@@ -440,10 +399,9 @@ apply to the first column of a feature matrix. Below, we pass it a
 matrix with a single column: `X_age`. The argument `lam` is the penalty parameter $\lambda$ as discussed in Section~\ref{Ch7:sec5.2}.
 
 ```python
-X_age = np.asarray(age).reshape((-1,1))
+X_age = np.asarray(age).reshape((-1, 1))
 gam = LinearGAM(s_gam(0, lam=0.6))
 gam.fit(X_age, y)
-
 ```
 
 The `pygam` library generally expects a matrix of features so we reshape `age` to be a matrix (a two-dimensional array) instead
@@ -455,31 +413,23 @@ The function `np.logspace()` is similar to `np.linspace()` but spaces points
 evenly on the log-scale. Below we vary `lam` from $10^{-2}$ to $10^6$.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 ax.scatter(age, y, facecolor="gray", alpha=0.5)
 for lam in np.logspace(-2, 6, 5):
     gam = LinearGAM(s_gam(0, lam=lam)).fit(X_age, y)
-    ax.plot(age_grid,
-            gam.predict(age_grid),
-            label=f"{lam:.1e}",
-            linewidth=3)
+    ax.plot(age_grid, gam.predict(age_grid), label=f"{lam:.1e}", linewidth=3)
 ax.set_xlabel("Age", fontsize=20)
 ax.set_ylabel("Wage", fontsize=20)
 ax.legend(title=r"$\lambda$");
-
 ```
 
 The `pygam` package can perform a search for an optimal smoothing parameter.
 
 ```python
 gam_opt = gam.gridsearch(X_age, y)
-ax.plot(age_grid,
-        gam_opt.predict(age_grid),
-        label="Grid search",
-        linewidth=4)
+ax.plot(age_grid, gam_opt.predict(age_grid), label="Grid search", linewidth=4)
 ax.legend()
 fig
-
 ```
 
 Alternatively, we can fix the degrees of freedom of the smoothing
@@ -494,7 +444,6 @@ age_term = gam.terms[0]
 lam_4 = approx_lam(X_age, age_term, 4)
 age_term.lam = lam_4
 degrees_of_freedom(X_age, age_term)
-
 ```
 
 Let’s vary the degrees of freedom in a similar plot to above. We choose the degrees of freedom
@@ -502,23 +451,16 @@ as the desired degrees of freedom plus one to account for the fact that these sm
 splines always have an intercept term. Hence, a value of one for `df` is just a linear fit.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
-ax.scatter(X_age,
-           y,
-           facecolor="gray",
-           alpha=0.3)
-for df in [1,3,4,8,15]:
-    lam = approx_lam(X_age, age_term, df+1)
+fig, ax = subplots(figsize=(8, 8))
+ax.scatter(X_age, y, facecolor="gray", alpha=0.3)
+for df in [1, 3, 4, 8, 15]:
+    lam = approx_lam(X_age, age_term, df + 1)
     age_term.lam = lam
     gam.fit(X_age, y)
-    ax.plot(age_grid,
-            gam.predict(age_grid),
-            label=f"{df:d}",
-            linewidth=4)
+    ax.plot(age_grid, gam.predict(age_grid), label=f"{df:d}", linewidth=4)
 ax.set_xlabel("Age", fontsize=20)
 ax.set_ylabel("Wage", fontsize=20)
 ax.legend(title="Degrees of freedom");
-
 ```
 
 ### Additive Models with Several Terms
@@ -537,12 +479,13 @@ to access the pieces separately when constructing partial dependence plots.
 ```python
 ns_age = NaturalSpline(df=4).fit(age)
 ns_year = NaturalSpline(df=5).fit(Wage["year"])
-Xs = [ns_age.transform(age),
-      ns_year.transform(Wage["year"]),
-      pd.get_dummies(Wage["education"]).values]
+Xs = [
+    ns_age.transform(age),
+    ns_year.transform(Wage["year"]),
+    pd.get_dummies(Wage["education"]).values,
+]
 X_bh = np.hstack(Xs)
 gam_bh = sm.OLS(y, X_bh).fit()
-
 ```
 Here the function `NaturalSpline()` is the workhorse supporting
 the `ns()` helper function.  We chose to use all columns of the
@@ -554,26 +497,23 @@ given grids for `age` and `year`.
  We simply predict with new $X$ matrices, fixing all but one of the features at a time.
 
 ```python
-age_grid = np.linspace(age.min(),
-                       age.max(),
-                       100)
+age_grid = np.linspace(age.min(), age.max(), 100)
 X_age_bh = X_bh.copy()[:100]
-X_age_bh[:] = X_bh[:].mean(0)[None,:]
-X_age_bh[:,:4] = ns_age.transform(age_grid)
+X_age_bh[:] = X_bh[:].mean(0)[None, :]
+X_age_bh[:, :4] = ns_age.transform(age_grid)
 preds = gam_bh.get_prediction(X_age_bh)
 bounds_age = preds.conf_int(alpha=0.05)
 partial_age = preds.predicted_mean
 center = partial_age.mean()
 partial_age -= center
 bounds_age -= center
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 ax.plot(age_grid, partial_age, "b", linewidth=3)
-ax.plot(age_grid, bounds_age[:,0], "r--", linewidth=3)
-ax.plot(age_grid, bounds_age[:,1], "r--", linewidth=3)
+ax.plot(age_grid, bounds_age[:, 0], "r--", linewidth=3)
+ax.plot(age_grid, bounds_age[:, 1], "r--", linewidth=3)
 ax.set_xlabel("Age")
 ax.set_ylabel("Effect on wage")
 ax.set_title("Partial dependence of age on wage", fontsize=20);
-
 ```
 Let's explain in some detail what we did above. The idea is to create a new prediction matrix, where all but the columns belonging to `age` are constant (and set to  their training-data means). The four columns for `age` are filled in with the natural spline basis evaluated at the 100 values in `age_grid`.
 
@@ -587,26 +527,23 @@ We also look at the effect of `year` on `wage`; the process is the same.
 
 ```python
 year_grid = np.linspace(2003, 2009, 100)
-year_grid = np.linspace(Wage["year"].min(),
-                        Wage["year"].max(),
-                        100)
+year_grid = np.linspace(Wage["year"].min(), Wage["year"].max(), 100)
 X_year_bh = X_bh.copy()[:100]
-X_year_bh[:] = X_bh[:].mean(0)[None,:]
-X_year_bh[:,4:9] = ns_year.transform(year_grid)
+X_year_bh[:] = X_bh[:].mean(0)[None, :]
+X_year_bh[:, 4:9] = ns_year.transform(year_grid)
 preds = gam_bh.get_prediction(X_year_bh)
 bounds_year = preds.conf_int(alpha=0.05)
 partial_year = preds.predicted_mean
 center = partial_year.mean()
 partial_year -= center
 bounds_year -= center
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 ax.plot(year_grid, partial_year, "b", linewidth=3)
-ax.plot(year_grid, bounds_year[:,0], "r--", linewidth=3)
-ax.plot(year_grid, bounds_year[:,1], "r--", linewidth=3)
+ax.plot(year_grid, bounds_year[:, 0], "r--", linewidth=3)
+ax.plot(year_grid, bounds_year[:, 1], "r--", linewidth=3)
 ax.set_xlabel("Year")
 ax.set_ylabel("Effect on wage")
 ax.set_title("Partial dependence of year on wage", fontsize=20);
-
 ```
 
 We now fit the model (\ref{Ch7:nsmod})  using smoothing splines rather
@@ -618,14 +555,9 @@ with the `cat.codes` attribute of `education`. As `year` only has 7 unique value
 use only seven basis functions for it.
 
 ```python
-gam_full = LinearGAM(s_gam(0) +
-                     s_gam(1, n_splines=7) +
-                     f_gam(2, lam=0))
-Xgam = np.column_stack([age,
-                        Wage["year"],
-                        Wage["education"].cat.codes])
+gam_full = LinearGAM(s_gam(0) + s_gam(1, n_splines=7) + f_gam(2, lam=0))
+Xgam = np.column_stack([age, Wage["year"], Wage["education"].cat.codes])
 gam_full = gam_full.fit(Xgam, y)
-
 ```
 The two `s_gam()` terms result in smoothing spline fits, and use a default value for $\lambda$  (`lam=0.6`), which is somewhat arbitrary. For the categorical term `education`, specified using a `f_gam()` term,  we specify `lam=0` to avoid any shrinkage.
 We produce the partial dependence plot in `age` to see the effect of these choices.
@@ -635,12 +567,11 @@ are generated by the `pygam` package. We provide a `plot_gam()`
 function for partial-dependence plots in `ISLP.pygam`, which makes this job easier than in our last example with natural splines.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 plot_gam(gam_full, 0, ax=ax)
 ax.set_xlabel("Age")
 ax.set_ylabel("Effect on wage")
 ax.set_title("Partial dependence of age on wage - default lam=0.6", fontsize=20);
-
 ```
 
 We see that the function is somewhat wiggly. It is more natural to specify the `df` than a value for `lam`. 
@@ -650,11 +581,10 @@ of the smoothing spline.
 
 ```python
 age_term = gam_full.terms[0]
-age_term.lam = approx_lam(Xgam, age_term, df=4+1)
+age_term.lam = approx_lam(Xgam, age_term, df=4 + 1)
 year_term = gam_full.terms[1]
-year_term.lam = approx_lam(Xgam, year_term, df=4+1)
+year_term.lam = approx_lam(Xgam, year_term, df=4 + 1)
 gam_full = gam_full.fit(Xgam, y)
-
 ```
 Note that updating `age_term.lam` above updates it in `gam_full.terms[0]` as well! Likewise for `year_term.lam`.
 
@@ -662,14 +592,11 @@ Repeating the plot for `age`, we see that it is much smoother.
 We also produce the plot for `year`.
 
 ```python
-fig, ax = subplots(figsize=(8,8))
-plot_gam(gam_full,
-         1,
-         ax=ax)
+fig, ax = subplots(figsize=(8, 8))
+plot_gam(gam_full, 1, ax=ax)
 ax.set_xlabel("Year")
 ax.set_ylabel("Effect on wage")
 ax.set_title("Partial dependence of year on wage", fontsize=20)
-
 ```
 Finally we plot `education`, which is categorical. The partial dependence plot is different, and more suitable for the set of fitted constants for each level of this variable. 
 
@@ -678,10 +605,8 @@ fig, ax = subplots(figsize=(8, 8))
 ax = plot_gam(gam_full, 2)
 ax.set_xlabel("Education")
 ax.set_ylabel("Effect on wage")
-ax.set_title("Partial dependence of wage on education",
-             fontsize=20)
+ax.set_title("Partial dependence of wage on education", fontsize=20)
 ax.set_xticklabels(Wage["education"].cat.categories, fontsize=8);
-
 ```
 
 ### ANOVA Tests for Additive Models
@@ -694,11 +619,8 @@ GAM that uses a spline function of `year` ($\mathcal{M}_3$).
 ```python
 gam_0 = LinearGAM(age_term + f_gam(2, lam=0))
 gam_0.fit(Xgam, y)
-gam_linear = LinearGAM(age_term +
-                       l_gam(1, lam=0) +
-                       f_gam(2, lam=0))
+gam_linear = LinearGAM(age_term + l_gam(1, lam=0) + f_gam(2, lam=0))
 gam_linear.fit(Xgam, y)
-
 ```
 
 Notice our use of `age_term` in the expressions above. We do this because
@@ -709,7 +631,6 @@ three models fit above.
 
 ```python
 anova_gam(gam_0, gam_linear, gam_full)
-
 ```
  We find that there is compelling evidence that a GAM with a linear
 function in `year` is better than a GAM that does not include
@@ -722,11 +643,8 @@ We can repeat the same process for `age` as well. We see there is very clear evi
 a non-linear term is required for `age`.
 
 ```python
-gam_0 = LinearGAM(year_term +
-                  f_gam(2, lam=0))
-gam_linear = LinearGAM(l_gam(0, lam=0) +
-                       year_term +
-                       f_gam(2, lam=0))
+gam_0 = LinearGAM(year_term + f_gam(2, lam=0))
+gam_linear = LinearGAM(l_gam(0, lam=0) + year_term + f_gam(2, lam=0))
 gam_0.fit(Xgam, y)
 gam_linear.fit(Xgam, y)
 anova_gam(gam_0, gam_linear, gam_full)
@@ -736,7 +654,6 @@ There is a (verbose) `summary()` method for the GAM fit.
 
 ```python
 gam_full.summary()
-
 ```
 
 We can make predictions from `gam` objects, just like from
@@ -745,18 +662,14 @@ We can make predictions from `gam` objects, just like from
 
 ```python
 Yhat = gam_full.predict(Xgam)
-
 ```
 
 In order to fit a logistic regression GAM, we use `LogisticGAM()` 
 from `pygam`.
 
 ```python
-gam_logit = LogisticGAM(age_term +
-                        l_gam(1, lam=0) +
-                        f_gam(2, lam=0))
+gam_logit = LogisticGAM(age_term + l_gam(1, lam=0) + f_gam(2, lam=0))
 gam_logit.fit(Xgam, high_earn)
-
 ```
 
 ```python
@@ -764,17 +677,14 @@ fig, ax = subplots(figsize=(8, 8))
 ax = plot_gam(gam_logit, 2)
 ax.set_xlabel("Education")
 ax.set_ylabel("Effect on wage")
-ax.set_title("Partial dependence of wage on education",
-             fontsize=20)
+ax.set_title("Partial dependence of wage on education", fontsize=20)
 ax.set_xticklabels(Wage["education"].cat.categories, fontsize=8);
-
 ```
 The model seems to be very flat, with especially high error bars for the first category.
 Let's look at the data a bit more closely.
 
 ```python
 pd.crosstab(Wage["high_earn"], Wage["education"])
-
 ```
 We see that there are no high earners in the first category of
 education, meaning that the model will have a hard time fitting.  We
@@ -790,11 +700,8 @@ on this smaller subset.
 ```python
 only_hs = Wage["education"] == "1. < HS Grad"
 Wage_ = Wage.loc[~only_hs]
-Xgam_ = np.column_stack([Wage_["age"],
-                         Wage_["year"],
-                         Wage_["education"].cat.codes-1])
+Xgam_ = np.column_stack([Wage_["age"], Wage_["year"], Wage_["education"].cat.codes - 1])
 high_earn_ = Wage_["high_earn"]
-
 ```
 In the second-to-last line above, we subtract one  from the codes of the category, due to a bug in `pygam`. It just relabels
 the education values and hence has no effect on the fit.
@@ -802,11 +709,8 @@ the education values and hence has no effect on the fit.
 We now fit the model.
 
 ```python
-gam_logit_ = LogisticGAM(age_term +
-                         year_term +
-                         f_gam(2, lam=0))
+gam_logit_ = LogisticGAM(age_term + year_term + f_gam(2, lam=0))
 gam_logit_.fit(Xgam_, high_earn_)
-
 ```
 
 Let’s look at the effect of `education`, `year` and `age` on high earner status now that we’ve
@@ -818,9 +722,7 @@ ax = plot_gam(gam_logit_, 2)
 ax.set_xlabel("Education")
 ax.set_ylabel("Effect on wage")
 ax.set_title("Partial dependence of high earner status on education", fontsize=20)
-ax.set_xticklabels(Wage["education"].cat.categories[1:],
-                   fontsize=8);
-
+ax.set_xticklabels(Wage["education"].cat.categories[1:], fontsize=8);
 ```
 
 ```python
@@ -828,9 +730,7 @@ fig, ax = subplots(figsize=(8, 8))
 ax = plot_gam(gam_logit_, 1)
 ax.set_xlabel("Year")
 ax.set_ylabel("Effect on wage")
-ax.set_title("Partial dependence of high earner status on year",
-             fontsize=20);
-
+ax.set_title("Partial dependence of high earner status on year", fontsize=20);
 ```
 
 ```python
@@ -839,7 +739,6 @@ ax = plot_gam(gam_logit_, 0)
 ax.set_xlabel("Age")
 ax.set_ylabel("Effect on wage")
 ax.set_title("Partial dependence of high earner status on age", fontsize=20);
-
 ```
 
 ## Local Regression
@@ -853,21 +752,14 @@ the observations. As expected, using a span of 0.5 is smoother than 0.2.
 
 ```python
 lowess = sm.nonparametric.lowess
-fig, ax = subplots(figsize=(8,8))
+fig, ax = subplots(figsize=(8, 8))
 ax.scatter(age, y, facecolor="gray", alpha=0.5)
 for span in [0.2, 0.5]:
-    fitted = lowess(y,
-                    age,
-                    frac=span,
-                    xvals=age_grid)
-    ax.plot(age_grid,
-            fitted,
-            label=f"{span:.1f}",
-            linewidth=4)
+    fitted = lowess(y, age, frac=span, xvals=age_grid)
+    ax.plot(age_grid, fitted, label=f"{span:.1f}", linewidth=4)
 ax.set_xlabel("Age", fontsize=20)
 ax.set_ylabel("Wage", fontsize=20)
 ax.legend(title="span", fontsize=15);
-
 ```
   
  

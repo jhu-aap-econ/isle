@@ -2,7 +2,7 @@
 jupyter:
   jupytext:
     cell_metadata_filter: -all
-    formats: notebooks//ipynb,markdown//md
+    formats: notebooks//ipynb,markdown//md,scripts//py
     text_representation:
       extension: .md
       format_name: markdown
@@ -23,7 +23,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from ISLP import load_data
-
 ```
 
 We also collect the new imports
@@ -34,7 +33,6 @@ from scipy.stats import t as t_dbn
 from scipy.stats import ttest_1samp, ttest_ind, ttest_rel
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.multitest import multipletests as mult_test
-
 ```
 
 ## Review of Hypothesis Tests
@@ -47,9 +45,8 @@ have mean $0$ and variance $1$.
 ```python
 rng = np.random.default_rng(12)
 X = rng.standard_normal((10, 100))
-true_mean = np.array([0.5]*50 + [0]*50)
-X += true_mean[None,:]
-
+true_mean = np.array([0.5] * 50 + [0] * 50)
+X += true_mean[None, :]
 ```
 
 To begin, we use `ttest_1samp()`  from the
@@ -57,9 +54,8 @@ To begin, we use `ttest_1samp()`  from the
 hypothesis that the first variable has mean zero.
 
 ```python
-result = ttest_1samp(X[:,0], 0)
+result = ttest_1samp(X[:, 0], 0)
 result.pvalue
-
 ```
 
 The $p$-value comes out to 0.931, which is not low enough to
@@ -77,25 +73,15 @@ $H_{0j}$, for $j=1,\ldots,100$.
 ```python
 p_values = np.empty(100)
 for i in range(100):
-   p_values[i] = ttest_1samp(X[:,i], 0).pvalue
-decision = pd.cut(p_values,
-                  [0, 0.05, 1],
-                  labels=["Reject H0",
-                          "Do not reject H0"])
-truth = pd.Categorical(true_mean == 0,
-                       categories=[True, False],
-                       ordered=True)
-
+    p_values[i] = ttest_1samp(X[:, i], 0).pvalue
+decision = pd.cut(p_values, [0, 0.05, 1], labels=["Reject H0", "Do not reject H0"])
+truth = pd.Categorical(true_mean == 0, categories=[True, False], ordered=True)
 ```
 Since this is a simulated data set, we can create a $2 \times 2$ table
 similar to  Table~\ref{Ch12:tab-hypotheses}.
 
 ```python
-pd.crosstab(decision,
-            truth,
-     rownames=["Decision"],
-     colnames=["H0"])
-
+pd.crosstab(decision, truth, rownames=["Decision"], colnames=["H0"])
 ```
 Therefore, at level $\alpha=0.05$, we reject 15 of the 50 false
 null hypotheses, and we incorrectly reject 5 of the true null
@@ -115,23 +101,14 @@ null hypotheses equals $1$. We make only 10 Type II errors.
  
 
 ```python
-true_mean = np.array([1]*50 + [0]*50)
+true_mean = np.array([1] * 50 + [0] * 50)
 X = rng.standard_normal((10, 100))
-X += true_mean[None,:]
+X += true_mean[None, :]
 for i in range(100):
-   p_values[i] = ttest_1samp(X[:,i], 0).pvalue
-decision = pd.cut(p_values,
-                  [0, 0.05, 1],
-                  labels=["Reject H0",
-                          "Do not reject H0"])
-truth = pd.Categorical(true_mean == 0,
-                       categories=[True, False],
-                       ordered=True)
-pd.crosstab(decision,
-            truth,
-            rownames=["Decision"],
-            colnames=["H0"])
-
+    p_values[i] = ttest_1samp(X[:, i], 0).pvalue
+decision = pd.cut(p_values, [0, 0.05, 1], labels=["Reject H0", "Do not reject H0"])
+truth = pd.Categorical(true_mean == 0, categories=[True, False], ordered=True)
+pd.crosstab(decision, truth, rownames=["Decision"], colnames=["H0"])
 ```
 
 ## Family-Wise Error Rate
@@ -145,16 +122,15 @@ reproduce  Figure~\ref{Ch12:fwer}.
 ```python
 m = np.linspace(1, 501)
 fig, ax = plt.subplots()
-[ax.plot(m,
-         1 - (1 - alpha)**m,
-         label=r"$\alpha=%s$" % str(alpha))
-         for alpha in [0.05, 0.01, 0.001]]
+[
+    ax.plot(m, 1 - (1 - alpha) ** m, label=r"$\alpha=%s$" % str(alpha))
+    for alpha in [0.05, 0.01, 0.001]
+]
 ax.set_xscale("log")
 ax.set_xlabel("Number of Hypotheses")
 ax.set_ylabel("Family-Wise Error Rate")
 ax.legend()
 ax.axhline(0.05, c="k", ls="--");
-
 ```
 
 As discussed previously, even for moderate values of $m$ such as $50$,
@@ -171,12 +147,11 @@ $H_{0,j}: \mu_j=0$.
 
 ```python
 Fund = load_data("Fund")
-fund_mini = Fund.iloc[:,:5]
+fund_mini = Fund.iloc[:, :5]
 fund_mini_pvals = np.empty(5)
 for i in range(5):
-    fund_mini_pvals[i] = ttest_1samp(fund_mini.iloc[:,i], 0).pvalue
+    fund_mini_pvals[i] = ttest_1samp(fund_mini.iloc[:, i], 0).pvalue
 fund_mini_pvals
-
 ```
 
 The $p$-values are low for Managers One and Three, and high for the
@@ -203,9 +178,8 @@ The `mult_test()` function takes $p$-values and a `method` argument, as well as 
 as well as the adjusted $p$-values (`bonf`).
 
 ```python
-reject, bonf = mult_test(fund_mini_pvals, method = "bonferroni")[:2]
+reject, bonf = mult_test(fund_mini_pvals, method="bonferroni")[:2]
 reject
-
 ```
 
 The $p$-values `bonf` are simply the `fund_mini_pvalues` multiplied by 5 and truncated to be less than
@@ -213,7 +187,6 @@ or equal to 1.
 
 ```python
 bonf, np.minimum(fund_mini_pvals * 5, 1)
-
 ```
 
 Therefore, using Bonferroni’s method, we are able to reject the null hypothesis only for Manager
@@ -224,8 +197,7 @@ that we can  reject the null
 hypotheses for Managers One and Three at a FWER of $0.05$.
 
 ```python
-mult_test(fund_mini_pvals, method = "holm", alpha=0.05)[:2]
-
+mult_test(fund_mini_pvals, method="holm", alpha=0.05)[:2]
 ```
 
 As discussed previously, Manager One seems to perform particularly
@@ -234,7 +206,6 @@ well, whereas Manager Two has poor performance.
 
 ```python
 fund_mini.mean()
-
 ```
 
 Is there evidence of a meaningful difference in performance between
@@ -242,9 +213,7 @@ these two managers?  We can check this by performing a  paired $t$-test  using t
 from `scipy.stats`:
 
 ```python
-ttest_rel(fund_mini["Manager1"],
-          fund_mini["Manager2"]).pvalue
-
+ttest_rel(fund_mini["Manager1"], fund_mini["Manager2"]).pvalue
 ```
 
 The test results in a $p$-value of 0.038,
@@ -265,11 +234,10 @@ excess returns achieved by each manager, and the predictor indicates
 the manager to which each return corresponds.
 
 ```python
-returns = np.hstack([fund_mini.iloc[:,i] for i in range(5)])
-managers = np.hstack([[i+1]*50 for i in range(5)])
+returns = np.hstack([fund_mini.iloc[:, i] for i in range(5)])
+managers = np.hstack([[i + 1] * 50 for i in range(5)])
 tukey = pairwise_tukeyhsd(returns, managers)
 print(tukey.summary())
-
 ```
 
 The `pairwise_tukeyhsd()` function provides confidence intervals
@@ -284,9 +252,8 @@ of `tukey`. Any pair of intervals that don’t overlap indicates a significant d
 no differences are considered significant as reported in the table above.
 
 ```python
-fig, ax = plt.subplots(figsize=(8,8))
+fig, ax = plt.subplots(figsize=(8, 8))
 tukey.plot_simultaneous(ax=ax);
-
 ```
 
 ## False Discovery Rate
@@ -299,7 +266,6 @@ $j$th fund manager’s mean return is zero.
 fund_pvalues = np.empty(2000)
 for i, manager in enumerate(Fund.columns):
     fund_pvalues[i] = ttest_1samp(Fund[manager], 0).pvalue
-
 ```
 
 There are far too many managers to consider trying to control the FWER.
@@ -307,9 +273,8 @@ Instead, we focus on controlling the FDR: that is, the expected fraction of reje
 The `multipletests()` function (abbreviated `mult_test()`) can be used to carry out the Benjamini--Hochberg procedure.
 
 ```python
-fund_qvalues = mult_test(fund_pvalues, method = "fdr_bh")[1]
+fund_qvalues = mult_test(fund_pvalues, method="fdr_bh")[1]
 fund_qvalues[:10]
-
 ```
 
 The  *q-values* output by the
@@ -323,7 +288,6 @@ If we control the FDR at 10%, then for how many of the fund managers can we reje
 
 ```python
 (fund_qvalues <= 0.1).sum()
-
 ```
 We find that 146 of the 2,000 fund managers have a $q$-value below
 0.1; therefore, we are able to conclude that 146 of the fund managers
@@ -336,7 +300,6 @@ null hypotheses!
 
 ```python
 (fund_pvalues <= 0.1 / 2000).sum()
-
 ```
 
 Figure~\ref{Ch12:fig:BonferroniBenjamini} displays the ordered
@@ -365,22 +328,19 @@ if sorted_set_.shape[0] > 0:
 else:
     selected_ = []
     sorted_set_ = []
-
 ```
 
 We now reproduce  the middle panel of Figure~\ref{Ch12:fig:BonferroniBenjamini}.
 
 ```python
 fig, ax = plt.subplots()
-ax.scatter(np.arange(0, sorted_.shape[0]) + 1,
-           sorted_, s=10)
+ax.scatter(np.arange(0, sorted_.shape[0]) + 1, sorted_, s=10)
 ax.set_yscale("log")
 ax.set_xscale("log")
 ax.set_ylabel("P-Value")
 ax.set_xlabel("Index")
-ax.scatter(sorted_set_+1, sorted_[sorted_set_], c="r", s=20)
-ax.axline((0, 0), (1,q/m), c="k", ls="--", linewidth=3);
-
+ax.scatter(sorted_set_ + 1, sorted_[sorted_set_], c="r", s=20)
+ax.axline((0, 0), (1, q / m), c="k", ls="--", linewidth=3);
 ```
 
 ## A Re-Sampling Approach
@@ -395,7 +355,6 @@ Khan = load_data("Khan")
 D = pd.concat([Khan["xtrain"], Khan["xtest"]])
 D["Y"] = pd.concat([Khan["ytrain"], Khan["ytest"]])
 D["Y"].value_counts()
-
 ```
 
 There are four classes of cancer. For each gene, we compare the mean
@@ -408,14 +367,11 @@ of 0.0412, suggesting modest evidence of a difference in mean
 expression levels between the two cancer types.
 
 ```python
-D2 = D[lambda df:df["Y"] == 2]
-D4 = D[lambda df:df["Y"] == 4]
+D2 = D[lambda df: df["Y"] == 2]
+D4 = D[lambda df: df["Y"] == 4]
 gene_11 = "G0011"
-observedT, pvalue = ttest_ind(D2[gene_11],
-                              D4[gene_11],
-                              equal_var=True)
+observedT, pvalue = ttest_ind(D2[gene_11], D4[gene_11], equal_var=True)
 observedT, pvalue
-
 ```
 
 However, this $p$-value relies on the assumption that under the null
@@ -438,12 +394,9 @@ n_ = D2[gene_11].shape[0]
 D_null = D_.copy()
 for b in range(B):
     rng.shuffle(D_null)
-    ttest_ = ttest_ind(D_null[:n_],
-                       D_null[n_:],
-                       equal_var=True)
+    ttest_ = ttest_ind(D_null[:n_], D_null[n_:], equal_var=True)
     Tnull[b] = ttest_.statistic
 (np.abs(Tnull) < np.abs(observedT)).mean()
-
 ```
 
 This fraction, 0.0398,
@@ -452,22 +405,13 @@ It is almost identical to the $p$-value of  0.0412 obtained using the theoretica
 We can plot  a histogram of the re-sampling-based test statistics in order to reproduce  Figure~\ref{Ch12:fig-permp-1}.
 
 ```python
-fig, ax = plt.subplots(figsize=(8,8))
-ax.hist(Tnull,
-        bins=100,
-        density=True,
-        facecolor="y",
-        label="Null")
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.hist(Tnull, bins=100, density=True, facecolor="y", label="Null")
 xval = np.linspace(-4.2, 4.2, 1001)
-ax.plot(xval,
-        t_dbn.pdf(xval, D_.shape[0]-2),
-        c="r")
-ax.axvline(observedT,
-           c="b",
-           label="Observed")
+ax.plot(xval, t_dbn.pdf(xval, D_.shape[0] - 2), c="r")
+ax.axvline(observedT, c="b", label="Observed")
 ax.legend()
 ax.set_xlabel("Null Distribution of Test Statistic");
-
 ```
 The re-sampling-based null distribution is almost identical to the theoretical null distribution, which is displayed in red.
 
@@ -488,18 +432,13 @@ Tnull_vals = np.empty((m, B))
 
 for j in range(m):
     col = idx[j]
-    T_vals[j] = ttest_ind(D2[col],
-                          D4[col],
-                          equal_var=True).statistic
+    T_vals[j] = ttest_ind(D2[col], D4[col], equal_var=True).statistic
     D_ = np.hstack([D2[col], D4[col]])
     D_null = D_.copy()
     for b in range(B):
         rng.shuffle(D_null)
-        ttest_ = ttest_ind(D_null[:n_],
-                           D_null[n_:],
-                           equal_var=True)
-        Tnull_vals[j,b] = ttest_.statistic
-
+        ttest_ = ttest_ind(D_null[:n_], D_null[n_:], equal_var=True)
+        Tnull_vals[j, b] = ttest_.statistic
 ```
 
 Next, we compute the number of rejected null hypotheses $R$, the
@@ -512,12 +451,11 @@ using the absolute values of the test statistics from the 100 genes.
 cutoffs = np.sort(np.abs(T_vals))
 FDRs, Rs, Vs = np.empty((3, m))
 for j in range(m):
-   R = np.sum(np.abs(T_vals) >= cutoffs[j])
-   V = np.sum(np.abs(Tnull_vals) >= cutoffs[j]) / B
-   Rs[j] = R
-   Vs[j] = V
-   FDRs[j] = V / R
-
+    R = np.sum(np.abs(T_vals) >= cutoffs[j])
+    V = np.sum(np.abs(Tnull_vals) >= cutoffs[j]) / B
+    Rs[j] = R
+    Vs[j] = V
+    FDRs[j] = V / R
 ```
 
 Now, for any given FDR, we can find the genes that will be
@@ -533,7 +471,6 @@ the genes whose estimated FDR is less than 0.1.
 
 ```python
 sorted(idx[np.abs(T_vals) >= cutoffs[FDRs < 0.1].min()])
-
 ```
 
 At an FDR threshold of 0.2, more genes are selected, at the cost of having a higher expected
@@ -541,7 +478,6 @@ proportion of false discoveries.
 
 ```python
 sorted(idx[np.abs(T_vals) >= cutoffs[FDRs < 0.2].min()])
-
 ```
 
 The next line  generates  Figure~\ref{fig:labfdr}, which is similar
@@ -553,7 +489,6 @@ fig, ax = plt.subplots()
 ax.plot(Rs, FDRs, "b", linewidth=3)
 ax.set_xlabel("Number of Rejections")
 ax.set_ylabel("False Discovery Rate");
-
 ```
  
 
